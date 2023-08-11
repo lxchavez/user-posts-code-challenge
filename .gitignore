@@ -1,4 +1,8 @@
-node_modules
 # Keep environment variables out of version control
 .env
+
+# Build artifacts
+node_modules
+
+# Editor specific files and directories
 .vscode
