@@ -1,0 +1,6 @@
+{
+    "ExpressServer": {
+        "port": 3000,
+        "apiPrefix": "/api"
+    }
+}

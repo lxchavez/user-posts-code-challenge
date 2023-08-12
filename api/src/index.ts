@@ -1,13 +1,15 @@
+import AppConfig from "config";
 import { config } from "dotenv";
 import express, { Express } from "express";
 import router from "./router";
+
+const API_PREFIX = AppConfig.get("ExpressServer.apiPrefix") as string;
+const PORT = AppConfig.get("ExpressServer.port") as number;
 
 // Load secrets from .env file contents into process.env.
 config({ path: ".env" });
 
 const app: Express = express();
-const port = 3000;
 
-app.use("/", router);
-
-app.listen(port, () => console.log(`app listening on port ${port}!`));
+app.use(API_PREFIX, router);
+app.listen(PORT, () => console.log(`app listening on port ${PORT}!`));
