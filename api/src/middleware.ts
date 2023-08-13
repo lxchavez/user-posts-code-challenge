@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { body, validationResult } from "express-validator";
-import { ValidationError } from "./types";
+import { ValidationErrorResponse } from "./types";
 
 // Define validation middleware for the request body using express-validator.
 
@@ -79,7 +79,7 @@ export const validateIdParameter = (
   if (isNaN(id) || id < 0) {
     const error = {
       msg: "Invalid id parameter. Must be a positive integer.",
-    } as ValidationError;
+    } as ValidationErrorResponse;
 
     return response.status(400).send({ errors: [error] });
   }

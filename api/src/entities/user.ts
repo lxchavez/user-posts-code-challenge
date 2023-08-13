@@ -1,19 +1,19 @@
 import { Prisma } from "@prisma/client";
 import {
-  ResourceNotFound,
-  UserMutationError,
   UserInputValidationError,
-} from "./errors/UserErrors";
-import prisma from "./lib/prisma";
+  UserMutationError,
+  UserNotFoundError,
+} from "../errors/UserErrors";
+import prisma from "../lib/prisma";
 import {
-  EntityMutationError,
-  MissingResourceError,
+  EntityMutationErrorResponse,
+  MissingResourceErrorResponse,
   PrismaMetaFields,
-  ValidationError,
-} from "./types";
+  ValidationErrorResponse,
+} from "../types";
 
 // TODO: Get list of required fields from Prisma.UserCreateInput, maybe with reflection?
-const requiredUserFields: string[] = [
+const requiredFields: string[] = [
   "fullName",
   "email",
   "username",
@@ -30,9 +30,9 @@ const requiredUserFields: string[] = [
 export const createUser = async (
   input: object,
 ): Promise<Prisma.UserCreateInput> => {
-  const validationErrors: ValidationError[] = [];
+  const validationErrors: ValidationErrorResponse[] = [];
 
-  for (const field of requiredUserFields) {
+  for (const field of requiredFields) {
     if (!(field in input)) {
       validationErrors.push({
         location: "body",
@@ -40,7 +40,7 @@ export const createUser = async (
         path: field,
         type: "field",
         value: input[field],
-      } as ValidationError);
+      } as ValidationErrorResponse);
     }
   }
 
@@ -53,7 +53,7 @@ export const createUser = async (
 
     return await prisma.user.create({ data: userData });
   } catch (err) {
-    handleUserMutationError(err);
+    handleMutationError(err);
   }
 };
 
@@ -61,7 +61,7 @@ export const createUser = async (
  * Attempt to retrieve an existing User entity from our database.
  * @param userId the ID of the User to retrieve
  * @returns the {@link Prisma.User} object of the retrieved User
- * @throws a {@link ResourceNotFound} if the User with the given ID does not exist
+ * @throws a {@link UserNotFoundError} if the User with the given ID does not exist
  */
 export const retrieveUser = async (userId: number) => {
   const user = await prisma.user.findUnique({
@@ -74,8 +74,8 @@ export const retrieveUser = async (userId: number) => {
     const error = {
       msg: "User does not exist.",
       resourceId: userId,
-    } as MissingResourceError;
-    throw new ResourceNotFound("User not found", [error]);
+    } as MissingResourceErrorResponse;
+    throw new UserNotFoundError("User not found", [error]);
   }
 
   return user;
@@ -95,7 +95,7 @@ export const updateUser = async (
   input: object,
 ): Promise<Prisma.UserUpdateInput> => {
   let hasAtLeastOneFieldToUpdate = false;
-  for (const field of requiredUserFields) {
+  for (const field of requiredFields) {
     if (
       field in input &&
       input[field] !== null &&
@@ -107,7 +107,7 @@ export const updateUser = async (
   }
 
   if (!hasAtLeastOneFieldToUpdate) {
-    const validationErrors: ValidationError[] = [];
+    const validationErrors: ValidationErrorResponse[] = [];
 
     validationErrors.push({
       location: "body",
@@ -115,7 +115,7 @@ export const updateUser = async (
       path: "input",
       type: "field",
       value: "",
-    } as ValidationError);
+    } as ValidationErrorResponse);
 
     throw new UserInputValidationError(
       "At least one field with populated data is required to update a User",
@@ -131,7 +131,7 @@ export const updateUser = async (
       data: userData,
     });
   } catch (err) {
-    handleUserMutationError(err);
+    handleMutationError(err);
   }
 };
 
@@ -153,7 +153,7 @@ export const deleteUser = async (userId: number) => {
 
     return user;
   } catch (err) {
-    handleUserMutationError(err);
+    handleMutationError(err);
   }
 };
 
@@ -180,7 +180,7 @@ const formatFields = (meta: Record<string, unknown>): string => {
  * @throws a {@link NotFoundError} if an entity is not found
  * @throws the original {@link Error} if it is not a Prisma client or request error
  */
-const handleUserMutationError = (err: Error): void => {
+const handleMutationError = (err: Error): void => {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
       case "P2002": {
@@ -188,7 +188,7 @@ const handleUserMutationError = (err: Error): void => {
           msg: "User input contains duplicate identifiers.",
           type: "field",
           value: formatFields(err.meta),
-        } as EntityMutationError;
+        } as EntityMutationErrorResponse;
 
         throw new UserMutationError(
           `User cannot be created with given input data.`,
@@ -198,9 +198,9 @@ const handleUserMutationError = (err: Error): void => {
       case "P2025": {
         const error = {
           msg: "User does not exist.",
-        } as MissingResourceError;
+        } as MissingResourceErrorResponse;
 
-        throw new ResourceNotFound("Can't find User to update or delete.", [
+        throw new UserNotFoundError("Can't find User to update or delete.", [
           error,
         ]);
       }
@@ -209,7 +209,7 @@ const handleUserMutationError = (err: Error): void => {
 
         const error = {
           msg: "Encountered an unexpected error while procssing User creation request.",
-        } as EntityMutationError;
+        } as EntityMutationErrorResponse;
 
         throw new UserMutationError(
           "Encountered an unexpected error while procssing User creation request.",

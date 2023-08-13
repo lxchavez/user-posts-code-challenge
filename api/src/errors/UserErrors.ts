@@ -1,33 +1,18 @@
 import {
-  EntityMutationError,
-  MissingResourceError,
-  ValidationError,
+  EntityMutationErrorResponse,
+  MissingResourceErrorResponse,
+  ValidationErrorResponse,
 } from "../types";
-
-/**
- * Error for Create, Update, Delete operations of User entities.
- * @param message the error message
- */
-class UserMutationError extends Error {
-  public errors: EntityMutationError[];
-
-  constructor(message: string, errors: EntityMutationError[]) {
-    super(message);
-    this.errors = errors;
-
-    // Set the prototype explicitly (important for instanceof checks)
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
 
 /**
  * Error invalid or missing request inputs for User creation.
  * @param message the error message
+ * @param errors the list of {@link ValidationErrorResponse} errors
  */
 class UserInputValidationError extends Error {
-  public errors: ValidationError[];
+  public errors: ValidationErrorResponse[];
 
-  constructor(message: string, errors: ValidationError[]) {
+  constructor(message: string, errors: ValidationErrorResponse[]) {
     super(message);
     this.errors = errors;
 
@@ -37,13 +22,14 @@ class UserInputValidationError extends Error {
 }
 
 /**
- * Error for when a resource is not found.
+ * Error for Create, Update, Delete operations of User entities.
  * @param message the error message
+ * @param errors the list of {@link EntityMutationErrorResponse} errors
  */
-class ResourceNotFound extends Error {
-  public errors: MissingResourceError[];
+class UserMutationError extends Error {
+  public errors: EntityMutationErrorResponse[];
 
-  constructor(message: string, errors: MissingResourceError[]) {
+  constructor(message: string, errors: EntityMutationErrorResponse[]) {
     super(message);
     this.errors = errors;
 
@@ -52,4 +38,21 @@ class ResourceNotFound extends Error {
   }
 }
 
-export { ResourceNotFound, UserMutationError, UserInputValidationError };
+/**
+ * Error for when a User is not found.
+ * @param message the error message
+ *
+ */
+class UserNotFoundError extends Error {
+  public errors: MissingResourceErrorResponse[];
+
+  constructor(message: string, errors: MissingResourceErrorResponse[]) {
+    super(message);
+    this.errors = errors;
+
+    // Set the prototype explicitly (important for instanceof checks)
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export { UserMutationError, UserNotFoundError, UserInputValidationError };

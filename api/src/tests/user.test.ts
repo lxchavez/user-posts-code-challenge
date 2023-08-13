@@ -1,6 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
-import { createUser, retrieveUser, updateUser, deleteUser } from "../user";
+import {
+  createUser,
+  retrieveUser,
+  updateUser,
+  deleteUser,
+} from "../entities/user";
 import {
   ResourceNotFound,
   UserMutationError,

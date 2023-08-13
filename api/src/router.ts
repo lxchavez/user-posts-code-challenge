@@ -2,12 +2,17 @@ import BodyParser from "body-parser";
 import { Request, Response } from "express";
 import Router from "express-promise-router";
 import { Prisma } from "@prisma/client";
-import { createUser, deleteUser, retrieveUser, updateUser } from "./user";
+import {
+  createUser,
+  deleteUser,
+  retrieveUser,
+  updateUser,
+} from "./entities/user";
 import { validateIdParameter, validateUserRequest } from "./middleware";
 import {
   UserInputValidationError,
   UserMutationError,
-  ResourceNotFound,
+  UserNotFoundError,
 } from "./errors/UserErrors";
 
 /**
@@ -28,7 +33,7 @@ const resolveUserResult = (
         response.status(400).send({ errors: err.errors });
       } else if (err instanceof UserMutationError) {
         response.status(400).send({ errors: err.errors });
-      } else if (err instanceof ResourceNotFound) {
+      } else if (err instanceof UserNotFoundError) {
         response.status(404).send({ errors: err.errors });
       } else {
         console.error(err);
@@ -97,5 +102,9 @@ router.delete(
     resolveUserResult(userPromise, response);
   },
 );
+
+// Post routes
+
+// Persist a new Post to the database.
 
 export default router;
