@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import Router from "express-promise-router";
 import { Prisma } from "@prisma/client";
 import { createUser, retrieveUser, updateUser } from "./user";
-import { validateUserRequest } from "../middleware";
+import { validateIdParameter, validateUserRequest } from "./middleware";
 import {
   UserInputValidationError,
   UserMutationError,
@@ -60,17 +60,22 @@ router.post(
 );
 
 // Retrieve an existing User from the database.
-router.get("/users/:id", (request: Request, response: Response) => {
-  const id = parseInt(request.params.id);
+router.get(
+  "/users/:id",
+  validateIdParameter,
+  (request: Request, response: Response) => {
+    const id = parseInt(request.params.id);
 
-  const userPromise = retrieveUser(id);
-  resolveUserResult(userPromise, response);
-});
+    const userPromise = retrieveUser(id);
+    resolveUserResult(userPromise, response);
+  },
+);
 
 // Update an existing User in the database.
 router.put(
   "/users/:id",
   jsonParser,
+  validateIdParameter,
   validateUserRequest,
   (request: Request, response: Response) => {
     const body = request.body;

@@ -250,6 +250,30 @@ describe("API integration tests", () => {
       expect(body.username).toBe("dog.is.good");
     });
 
+    it("should respond with an error response if the id is not an integer", async () => {
+      const { status, body } = await request(app)
+        .get("/api/users/bogusId")
+        .send({});
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe(
+        "Invalid id parameter. Must be a positive integer.",
+      );
+    });
+
+    it("should respond with an error response if the id is an invalid integer", async () => {
+      const { status, body } = await request(app).get("/api/users/-1").send({});
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe(
+        "Invalid id parameter. Must be a positive integer.",
+      );
+    });
+
     it("should respond with an error response if the User does not exist", async () => {
       // Retrieve the User by ID and verify data.
       const { status, body } = await request(app).get("/api/users/420");
@@ -295,6 +319,30 @@ describe("API integration tests", () => {
       expect(body).toHaveProperty("errors");
       expect(body["errors"].length).toEqual(1);
       expect(body["errors"][0]["msg"]).toBe("User does not exist.");
+    });
+
+    it("should respond with an error response if the id is not an integer", async () => {
+      const { status, body } = await request(app)
+        .put("/api/users/bogusId")
+        .send({});
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe(
+        "Invalid id parameter. Must be a positive integer.",
+      );
+    });
+
+    it("should respond with an error response if the id is an invalid integer", async () => {
+      const { status, body } = await request(app).put("/api/users/-1").send({});
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe(
+        "Invalid id parameter. Must be a positive integer.",
+      );
     });
   });
 });

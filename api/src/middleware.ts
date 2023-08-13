@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { body, validationResult } from "express-validator";
+import { ValidationError } from "./types";
 
 // Define validation middleware for the request body using express-validator.
 
@@ -61,3 +62,27 @@ export const validateUserRequest = [
     next();
   },
 ];
+
+/**
+ * Validation middleware to check the id parameter of a request.
+ * @param request {@link Request}
+ * @param response {@link Response}
+ * @param next {@link NextFunction}
+ */
+export const validateIdParameter = (
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) => {
+  const id = parseInt(request.params.id);
+
+  if (isNaN(id) || id < 0) {
+    const error = {
+      msg: "Invalid id parameter. Must be a positive integer.",
+    } as ValidationError;
+
+    return response.status(400).send({ errors: [error] });
+  }
+
+  next();
+};

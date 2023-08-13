@@ -19,11 +19,11 @@ type EntityMutationError = {
 };
 
 type ValidationError = {
-  location: string;
+  location?: string;
   msg: string;
-  path: string;
-  type: string;
-  value: string;
+  path?: string;
+  type?: string;
+  value?: string;
 };
 
 export {
