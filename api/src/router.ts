@@ -2,7 +2,11 @@ import BodyParser from "body-parser";
 import { NextFunction, Request, Response } from "express";
 import Router from "express-promise-router";
 import { createUser, retrieveUser, updateUser } from "./user";
-import { ResourceNotFound, UserMutationError } from "./errors/UserErrors";
+import {
+  ResourceNotFound,
+  UserInputValidationError,
+  UserMutationError,
+} from "./errors/UserErrors";
 
 const router = Router();
 const jsonParser = BodyParser.json();
@@ -60,6 +64,9 @@ router.post(
       })
       .catch((err) => {
         if (err instanceof UserMutationError) {
+          res.status(400).send(err.message);
+          return;
+        } else if (err instanceof UserInputValidationError) {
           res.status(400).send(err.message);
           return;
         }

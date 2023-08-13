@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import isEmail from "validator/lib/isEmail";
 import {
   ResourceNotFound,
   UserMutationError,
@@ -31,6 +32,8 @@ export const createUser = async (input: object) => {
 
   try {
     const userData = input as Prisma.UserCreateInput;
+    validateCommonUserInput(userData);
+
     return await prisma.user.create({ data: userData });
   } catch (err) {
     handleUserMutationError(err);
@@ -87,6 +90,8 @@ export const updateUser = async (userId: number, input: object) => {
 
   try {
     const userData = input as Prisma.UserUpdateInput;
+    validateCommonUserInput(userData);
+
     return await prisma.user.update({
       where: { id: userId },
       data: userData,
@@ -143,5 +148,21 @@ const handleUserMutationError = (err: Error): void => {
     }
   } else {
     throw err;
+  }
+};
+
+/**
+ * Validates common User input fields.
+ * @param input the {@link Prisma.UserCreateInput} or {@link Prisma.UserUpdateInput} to validate
+ * @throws a {@link UserInputValidationError} if the input is invalid
+ */
+const validateCommonUserInput = (
+  input: Prisma.UserCreateInput | Prisma.UserUpdateInput,
+) => {
+  // Validate email address, if provided. We don't want to validate if the
+  // email is null or undefined, since that will be returned as an invalid
+  // email anyway.
+  if (typeof input.email === "string" && !isEmail(input.email)) {
+    throw new UserInputValidationError("Invalid email address provided.");
   }
 };

@@ -76,6 +76,20 @@ describe("createUser", () => {
       UserInputValidationError,
     );
   });
+
+  it("should throw an error if creating a User with an invalid email address", async () => {
+    const newUser = {
+      fullName: "John Doe",
+      email: "john.doe", // Invalid email address
+      username: "johndoe1377",
+      dateOfBirth: new Date("1970-01-01"),
+    };
+
+    await expect(createUser(newUser)).rejects.toThrow();
+    await expect(createUser(newUser)).rejects.toThrowError(
+      UserInputValidationError,
+    );
+  });
 });
 
 describe("updateUser", () => {
@@ -154,6 +168,19 @@ describe("updateUser", () => {
     await expect(updateUser(id, updatedUser)).rejects.toThrow();
     await expect(updateUser(id, updatedUser)).rejects.toThrowError(
       UserMutationError,
+    );
+  });
+
+  it("should throw an error if updating a User with an invalid email address", async () => {
+    const updatedUser = {
+      email: "jane.doe", // Invalid email address
+    };
+
+    const id = 1;
+
+    await expect(updateUser(id, updatedUser)).rejects.toThrow();
+    await expect(updateUser(id, updatedUser)).rejects.toThrowError(
+      UserInputValidationError,
     );
   });
 });
