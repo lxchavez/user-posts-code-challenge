@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import prisma from "../lib/prisma";
 import app from "../index";
 
-describe("API integration tests", () => {
+describe("User API integration tests", () => {
   describe("[POST] /api/users", () => {
     it("should respond with a 200 status code and User details", async () => {
       const { status, body } = await request(app).post("/api/users").send({
@@ -336,6 +336,61 @@ describe("API integration tests", () => {
 
     it("should respond with an error response if the id is an invalid integer", async () => {
       const { status, body } = await request(app).put("/api/users/-1").send({});
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe(
+        "Invalid id parameter. Must be a positive integer.",
+      );
+    });
+  });
+
+  describe("[DELETE] /api/users/:id", () => {
+    it("should respond with a 200 status code and User details", async () => {
+      // First, create a new User.
+      await request(app).post("/api/users").send({
+        fullName: "Goldie Retrieve",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+
+      // Look up the newly created User.
+      const newUser = await prisma.user.findFirst();
+      const userId = newUser?.id;
+
+      // Delete the User by ID and verify response.
+      const { status, body } = await request(app).delete(
+        `/api/users/${userId}`,
+      );
+
+      expect(status).toBe(200);
+      expect(body.id).toBe(userId);
+    });
+
+    it("should respond with an error response if the User does not exist", async () => {
+      const { status, body } = await request(app).delete("/api/users/420");
+
+      expect(status).toBe(404);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe("User does not exist.");
+    });
+
+    it("should respond with an error response if the id is not an integer", async () => {
+      const { status, body } = await request(app).delete("/api/users/bogusId");
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe(
+        "Invalid id parameter. Must be a positive integer.",
+      );
+    });
+
+    it("should respond with an error response if the id is an invalid integer", async () => {
+      const { status, body } = await request(app).delete("/api/users/-1");
 
       expect(status).toBe(400);
       expect(body).toHaveProperty("errors");

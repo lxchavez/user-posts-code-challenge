@@ -136,6 +136,28 @@ export const updateUser = async (
 };
 
 /**
+ * Deletes an existing User entity from our database. We are opting
+ * for a cascading delete strategy, so that all associated Posts
+ * will be deleted as well. This is to ensure that we do not have
+ * any orphaned Posts in our database and to support the User's "right
+ * to be forgotten".
+ * @param userId the ID of the User to delete
+ * @returns the {@link Prisma.User} object of the deleted User
+ * @see https://gdpr.eu/right-to-be-forgotten/
+ */
+export const deleteUser = async (userId: number) => {
+  try {
+    const user = await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return user;
+  } catch (err) {
+    handleUserMutationError(err);
+  }
+};
+
+/**
  * Collects the fields from a Prisma.PrismaClientKnownRequestError.
  * @param meta the `meta` property of a Prisma.PrismaClientKnownRequestError
  * @returns a comma-separated string of fields

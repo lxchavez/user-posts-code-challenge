@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
-import { createUser, retrieveUser, updateUser } from "../user";
+import { createUser, retrieveUser, updateUser, deleteUser } from "../user";
 import {
   ResourceNotFound,
   UserMutationError,
@@ -184,5 +184,49 @@ describe("retrieveUser by id", () => {
     await expect(retrieveUser(nonExistingId)).rejects.toThrowError(
       ResourceNotFound,
     );
+  });
+});
+
+describe("deleteUser by id", () => {
+  it("should delete existing User entity from the databse", async () => {
+    const existingUser = {
+      fullName: "John Doe",
+      email: "john.doe@example.com",
+      username: "johndoe1377",
+      dateOfBirth: new Date("1970-01-01"),
+    };
+
+    prisma.user.delete.mockResolvedValue({
+      ...existingUser,
+      id: 1,
+      createdAt: new Date("2021-01-01T17:30:00.000Z"),
+      updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+    });
+
+    const user = await deleteUser(1);
+    expect(user).toStrictEqual({
+      ...existingUser,
+      id: 1,
+      createdAt: new Date("2021-01-01T17:30:00.000Z"),
+      updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+    });
+  });
+
+  it("should throw an error if the User does not exist", async () => {
+    prisma.user.delete.mockImplementation(() => {
+      throw new Prisma.PrismaClientKnownRequestError(
+        "An operation failed because it depends on one or more records that were required but not found. Record to update not found.",
+        {
+          code: "P2025",
+          clientVersion: "1.0.0",
+          meta: {
+            cause: ["Record to delete does not exist."],
+          },
+        },
+      );
+    });
+
+    await expect(deleteUser(666)).rejects.toThrow();
+    await expect(deleteUser(666)).rejects.toThrowError(ResourceNotFound);
   });
 });

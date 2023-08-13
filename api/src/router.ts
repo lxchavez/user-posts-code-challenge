@@ -2,7 +2,7 @@ import BodyParser from "body-parser";
 import { Request, Response } from "express";
 import Router from "express-promise-router";
 import { Prisma } from "@prisma/client";
-import { createUser, retrieveUser, updateUser } from "./user";
+import { createUser, deleteUser, retrieveUser, updateUser } from "./user";
 import { validateIdParameter, validateUserRequest } from "./middleware";
 import {
   UserInputValidationError,
@@ -82,6 +82,18 @@ router.put(
     const id = parseInt(request.params.id);
 
     const userPromise = updateUser(id, body);
+    resolveUserResult(userPromise, response);
+  },
+);
+
+// Delete an existing User and their posts from the database.
+router.delete(
+  "/users/:id",
+  validateIdParameter,
+  (request: Request, response: Response) => {
+    const id = parseInt(request.params.id);
+
+    const userPromise = deleteUser(id);
     resolveUserResult(userPromise, response);
   },
 );
