@@ -1,8 +1,8 @@
 import BodyParser from "body-parser";
 import { NextFunction, Request, Response } from "express";
 import Router from "express-promise-router";
-import { createUser } from "./user";
-import { UserMutationError } from "./errors/UserErrors";
+import { createUser, updateUser } from "./user";
+import { ResourceNotFound, UserMutationError } from "./errors/UserErrors";
 
 const router = Router();
 const jsonParser = BodyParser.json();
@@ -21,7 +21,10 @@ const validateRequestBody = (
 ) => {
   const requestBody = req.body;
 
-  if (Object.keys(requestBody).length === 0) {
+  if (
+    typeof requestBody !== "object" ||
+    Object.keys(requestBody).length === 0
+  ) {
     res
       .status(400)
       .send("Missing request body! Please send a JSON body with the request.");
@@ -43,6 +46,12 @@ router.post(
   validateRequestBody,
   (req: Request, res: Response) => {
     const request = req.body;
+
+    // Convert date strings to Date objects.
+    if ("dateOfBirth" in request && typeof request.dateOfBirth === "string") {
+      request["dateOfBirth"] = new Date(request.dateOfBirth);
+    }
+
     const userPromise = createUser(request);
 
     void Promise.all([userPromise])
@@ -57,6 +66,36 @@ router.post(
 
         console.error(err);
         res.status(500).send("Encountered an error while creating user");
+      });
+  },
+);
+
+// Update an existing User in the database.
+router.put(
+  "/users/:id",
+  jsonParser,
+  validateRequestBody,
+  (req: Request, res: Response) => {
+    const request = req.body;
+    const id = parseInt(req.params.id);
+
+    const userPromise = updateUser(id, request);
+
+    void Promise.all([userPromise])
+      .then(([user]) => {
+        res.status(200).send(`Updated info for existing user ${user.id}`);
+      })
+      .catch((err) => {
+        if (err instanceof UserMutationError) {
+          res.status(400).send(err.message);
+          return;
+        } else if (err instanceof ResourceNotFound) {
+          res.status(404).send(err.message);
+          return;
+        }
+
+        console.error(err);
+        res.status(500).send("Encountered an error while updating user info");
       });
   },
 );

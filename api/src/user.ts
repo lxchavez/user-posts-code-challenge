@@ -1,23 +1,79 @@
 import { Prisma } from "@prisma/client";
 import {
+  ResourceNotFound,
   UserMutationError,
   UserInputValidationError,
 } from "./errors/UserErrors";
 import prisma from "./lib/prisma";
 import { PrismaMetaFields } from "./types";
 
+// TODO: Get list of required fields from Prisma.UserCreateInput, maybe with reflection?
+const requiredUserFields: string[] = [
+  "fullName",
+  "email",
+  "username",
+  "dateOfBirth",
+];
+
 /**
  * Creates a new User entity in our database.
  * @param data the {@link Prisma.UserCreateInput} used to create a new User
  * @returns the {@link Prisma.UserCreateInput} of the new User object
- * @throws a {@link UserMutationError} if there is a unique constraint violation or invalid inputs
+ * @throws a {@link UserMutationError} if there is a unique constraint violation
+ * @throws a {@link UserInputValidationError} if the input is missing required fields
  */
-export const createUser = async (user: unknown) => {
-  validateUserInput(user);
+export const createUser = async (input: object) => {
+  for (const field of requiredUserFields) {
+    if (!(field in input)) {
+      throw new UserInputValidationError(`Missing required input: ${field}`);
+    }
+  }
 
   try {
-    const userData = user as Prisma.UserCreateInput;
+    const userData = input as Prisma.UserCreateInput;
     return await prisma.user.create({ data: userData });
+  } catch (err) {
+    handleUserMutationError(err);
+  }
+};
+
+/**
+ * Updates an existing User entity in our database.
+ * @param userId the ID of the User to update
+ * @param input the {@link Prisma.UserUpdateInput} used to update the User
+ * @returns the {@link Prisma.UserUpdateInput} of the updated User object
+ * @throws a {@link UserMutationError} if there is a unique constraint violation
+ * @throws a {@link UserInputValidationError} if the input is missing required fields
+ * @throws a {@link ResourceNotFound} if the User with the given ID does not exist
+ */
+export const updateUser = async (userId: number, input: object) => {
+  let hasAtLeastOneFieldToUpdate = false;
+  for (const field of requiredUserFields) {
+    if (
+      field in input &&
+      input[field] !== null &&
+      input[field] !== undefined &&
+      input[field] !== ""
+    ) {
+      hasAtLeastOneFieldToUpdate = true;
+    }
+  }
+
+  if (!hasAtLeastOneFieldToUpdate) {
+    throw new UserInputValidationError(
+      "At least one field with populated data is required to update a User",
+    );
+  }
+
+  try {
+    const userData = input as Prisma.UserUpdateInput;
+    return await prisma.user.update({
+      where: { id: userId },
+      data: userData,
+      select: {
+        id: true,
+      },
+    });
   } catch (err) {
     handleUserMutationError(err);
   }
@@ -38,37 +94,12 @@ export const formatFields = (meta: Record<string, unknown>): string => {
 };
 
 /**
- * Validates the User data input by the client.
- * @param input the User data input by the client
- * @throws a {@link UserInputValidationError} if the input is not an object or is null
- * @throws a {@link UserInputValidationError} if the input is missing a required field
- */
-const validateUserInput = (input: unknown) => {
-  if (typeof input !== "object" || input === null) {
-    throw new UserInputValidationError("Invalid input given for User");
-  }
-
-  // TODO: Get list of required fields from Prisma.UserCreateInput, maybe with reflection?
-  const requiredFields: string[] = [
-    "fullName",
-    "email",
-    "username",
-    "dateOfBirth",
-  ];
-
-  for (const field of requiredFields) {
-    if (!(field in input)) {
-      throw new UserInputValidationError(`Missing required input: ${field}`);
-    }
-  }
-};
-
-/**
  * Handles Prisma client errors for User mutation operations. We handle errors
  * this way to limit information leakage of API/database internals to the
  * client.
  * @param err the error to handle
  * @throws a {@link UserMutationError} if there is a unique constraint violation or invalid inputs
+ * @throws a {@link NotFoundError} if an entity is not found
  * @throws the original {@link Error} if it is not a Prisma client or request error
  */
 const handleUserMutationError = (err: Error): void => {
@@ -77,8 +108,11 @@ const handleUserMutationError = (err: Error): void => {
       case "P2002": {
         const fields = formatFields(err.meta);
         throw new UserMutationError(
-          `There is a unique constraint violation, a new User cannot be created with given input fields: ${fields}`,
+          `User cannot be created with due to non-associabe fields: ${fields}`,
         );
+      }
+      case "P2025": {
+        throw new ResourceNotFound("Can't find User to update or delete.");
       }
       default: {
         console.error(err);
