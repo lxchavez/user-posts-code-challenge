@@ -23,7 +23,9 @@ const requiredUserFields: string[] = [
  * @throws a {@link UserMutationError} if there is a unique constraint violation
  * @throws a {@link UserInputValidationError} if the input is missing required fields
  */
-export const createUser = async (input: object) => {
+export const createUser = async (
+  input: object,
+): Promise<Prisma.UserCreateInput> => {
   for (const field of requiredUserFields) {
     if (!(field in input)) {
       throw new UserInputValidationError(`Missing required input: ${field}`);
@@ -69,7 +71,10 @@ export const retrieveUser = async (userId: number) => {
  * @throws a {@link UserInputValidationError} if the input is missing required fields
  * @throws a {@link ResourceNotFound} if the User with the given ID does not exist
  */
-export const updateUser = async (userId: number, input: object) => {
+export const updateUser = async (
+  userId: number,
+  input: object,
+): Promise<Prisma.UserUpdateInput> => {
   let hasAtLeastOneFieldToUpdate = false;
   for (const field of requiredUserFields) {
     if (
@@ -95,9 +100,6 @@ export const updateUser = async (userId: number, input: object) => {
     return await prisma.user.update({
       where: { id: userId },
       data: userData,
-      select: {
-        id: true,
-      },
     });
   } catch (err) {
     handleUserMutationError(err);
@@ -133,7 +135,7 @@ const handleUserMutationError = (err: Error): void => {
       case "P2002": {
         const fields = formatFields(err.meta);
         throw new UserMutationError(
-          `User cannot be created with due to non-associabe fields: ${fields}`,
+          `User cannot be created with duplicate fields: ${fields}`,
         );
       }
       case "P2025": {
@@ -142,7 +144,7 @@ const handleUserMutationError = (err: Error): void => {
       default: {
         console.error(err);
         throw new UserMutationError(
-          "Encountered an error while procssing User creation request.",
+          "Encountered an unexpected error while procssing User creation request.",
         );
       }
     }

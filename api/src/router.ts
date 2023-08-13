@@ -1,6 +1,7 @@
 import BodyParser from "body-parser";
 import { NextFunction, Request, Response } from "express";
 import Router from "express-promise-router";
+import { Prisma } from "@prisma/client";
 import { createUser, retrieveUser, updateUser } from "./user";
 import {
   ResourceNotFound,
@@ -8,28 +9,25 @@ import {
   UserMutationError,
 } from "./errors/UserErrors";
 
-const router = Router();
-const jsonParser = BodyParser.json();
-
 /**
  * Validates the request body of a route. This middleware should be used for
  * routes that require a request body.
- * @param req the Express Request object
- * @param res the Express Response object
+ * @param request the Express {@link Request} object
+ * @param response the Express {@link Response} object
  * @param next the Express NextFunction object
  */
 const validateRequestBody = (
-  req: Request,
-  res: Response,
+  request: Request,
+  response: Response,
   next: NextFunction,
 ) => {
-  const requestBody = req.body;
+  const requestBody = request.body;
 
   if (
     typeof requestBody !== "object" ||
     Object.keys(requestBody).length === 0
   ) {
-    res
+    response
       .status(400)
       .send("Missing request body! Please send a JSON body with the request.");
     return;
@@ -41,6 +39,41 @@ const validateRequestBody = (
   next();
 };
 
+/**
+ * Resolves a User operation promise and sends the appropriate response.
+ * @param promise the promise to resolve
+ * @param response the Express {@link Response} object
+ */
+const resolveUserPromise = (
+  promise: Promise<Prisma.UserCreateInput | Prisma.UserUpdateInput>,
+  response: Response,
+) => {
+  Promise.all([promise])
+    .then(([result]) => {
+      response.status(200).send(result);
+    })
+    .catch((err) => {
+      if (
+        err instanceof UserMutationError ||
+        err instanceof UserInputValidationError
+      ) {
+        response.status(400).send(err.message);
+      } else if (err instanceof ResourceNotFound) {
+        response.status(404).send(err.message);
+      } else {
+        console.error(err);
+        response
+          .status(500)
+          .send(
+            "Encountered an unexpected error while processing User request",
+          );
+      }
+    });
+};
+
+const jsonParser = BodyParser.json();
+const router = Router();
+
 router.get("/hello", (_, res) => res.send("Hello World!"));
 
 // Persist a new User to the database.
@@ -48,53 +81,25 @@ router.post(
   "/users",
   jsonParser,
   validateRequestBody,
-  (req: Request, res: Response) => {
-    const request = req.body;
+  (request: Request, response: Response) => {
+    const body = request.body;
 
     // Convert date strings to Date objects.
-    if ("dateOfBirth" in request && typeof request.dateOfBirth === "string") {
-      request["dateOfBirth"] = new Date(request.dateOfBirth);
+    if ("dateOfBirth" in body && typeof body.dateOfBirth === "string") {
+      body["dateOfBirth"] = new Date(body.dateOfBirth);
     }
 
-    const userPromise = createUser(request);
-
-    void Promise.all([userPromise])
-      .then(([user]) => {
-        res.status(200).send(`Created new user ${user.username}`);
-      })
-      .catch((err) => {
-        if (err instanceof UserMutationError) {
-          res.status(400).send(err.message);
-          return;
-        } else if (err instanceof UserInputValidationError) {
-          res.status(400).send(err.message);
-          return;
-        }
-
-        console.error(err);
-        res.status(500).send("Encountered an error while creating user");
-      });
+    const userPromise = createUser(body);
+    resolveUserPromise(userPromise, response);
   },
 );
 
 // Retrieve an existing User from the database.
-router.get("/users/:id", (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+router.get("/users/:id", (request: Request, response: Response) => {
+  const id = parseInt(request.params.id);
+
   const userPromise = retrieveUser(id);
-
-  void Promise.all([userPromise])
-    .then(([user]) => {
-      res.status(200).send(user);
-    })
-    .catch((err) => {
-      if (err instanceof ResourceNotFound) {
-        res.status(404).send(err.message);
-        return;
-      }
-
-      console.error(err);
-      res.status(500).send("Encountered an error while updating user info");
-    });
+  resolveUserPromise(userPromise, response);
 });
 
 // Update an existing User in the database.
@@ -102,28 +107,12 @@ router.put(
   "/users/:id",
   jsonParser,
   validateRequestBody,
-  (req: Request, res: Response) => {
-    const request = req.body;
-    const id = parseInt(req.params.id);
+  (request: Request, response: Response) => {
+    const body = request.body;
+    const id = parseInt(request.params.id);
 
-    const userPromise = updateUser(id, request);
-
-    void Promise.all([userPromise])
-      .then(([user]) => {
-        res.status(200).send(`Updated info for existing user ${user.id}`);
-      })
-      .catch((err) => {
-        if (err instanceof UserMutationError) {
-          res.status(400).send(err.message);
-          return;
-        } else if (err instanceof ResourceNotFound) {
-          res.status(404).send(err.message);
-          return;
-        }
-
-        console.error(err);
-        res.status(500).send("Encountered an error while updating user info");
-      });
+    const userPromise = updateUser(id, body);
+    resolveUserPromise(userPromise, response);
   },
 );
 
