@@ -1,7 +1,7 @@
 import BodyParser from "body-parser";
 import { NextFunction, Request, Response } from "express";
 import Router from "express-promise-router";
-import { createUser, updateUser } from "./user";
+import { createUser, retrieveUser, updateUser } from "./user";
 import { ResourceNotFound, UserMutationError } from "./errors/UserErrors";
 
 const router = Router();
@@ -69,6 +69,26 @@ router.post(
       });
   },
 );
+
+// Retrieve an existing User from the database.
+router.get("/users/:id", (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  const userPromise = retrieveUser(id);
+
+  void Promise.all([userPromise])
+    .then(([user]) => {
+      res.status(200).send(user);
+    })
+    .catch((err) => {
+      if (err instanceof ResourceNotFound) {
+        res.status(404).send(err.message);
+        return;
+      }
+
+      console.error(err);
+      res.status(500).send("Encountered an error while updating user info");
+    });
+});
 
 // Update an existing User in the database.
 router.put(

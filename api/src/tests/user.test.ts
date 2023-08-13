@@ -1,12 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
-import { createUser, updateUser } from "../user";
+import { createUser, retrieveUser, updateUser } from "../user";
 import {
   ResourceNotFound,
   UserMutationError,
   UserInputValidationError,
 } from "../errors/UserErrors";
 import prisma from "../lib/__mocks__/prisma";
+import exp from "constants";
 
 // Lets Vitest know that it should mock the module at the given path.
 vi.mock("../lib/prisma");
@@ -153,6 +154,36 @@ describe("updateUser", () => {
     await expect(updateUser(id, updatedUser)).rejects.toThrow();
     await expect(updateUser(id, updatedUser)).rejects.toThrowError(
       UserMutationError,
+    );
+  });
+});
+
+describe("retrieveUser by id", () => {
+  const existingUser = {
+    id: 1,
+    fullName: "Jane Doe",
+    email: "jane.doe@example.com",
+    username: "janeplain",
+    dateOfBirth: new Date("2000-12-25"),
+    createdAt: new Date("2021-01-01T17:30:00.000Z"),
+    updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+  };
+
+  it("should return existing User info", async () => {
+    const id = 1;
+
+    prisma.user.findUnique.mockResolvedValue(existingUser);
+
+    const user = await retrieveUser(id);
+    expect(user).toStrictEqual(existingUser);
+  });
+
+  it("should throw an error if the User does not exist", async () => {
+    const nonExistingId = 666;
+
+    await expect(retrieveUser(nonExistingId)).rejects.toThrow();
+    await expect(retrieveUser(nonExistingId)).rejects.toThrowError(
+      ResourceNotFound,
     );
   });
 });

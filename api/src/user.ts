@@ -38,6 +38,26 @@ export const createUser = async (input: object) => {
 };
 
 /**
+ * Attempt to retrieve an existing User entity from our database.
+ * @param userId the ID of the User to retrieve
+ * @returns the {@link Prisma.User} object of the retrieved User
+ * @throws a {@link ResourceNotFound} if the User with the given ID does not exist
+ */
+export const retrieveUser = async (userId: number) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    throw new ResourceNotFound(`User with ID ${userId} does not exist`);
+  }
+
+  return user;
+};
+
+/**
  * Updates an existing User entity in our database.
  * @param userId the ID of the User to update
  * @param input the {@link Prisma.UserUpdateInput} used to update the User
