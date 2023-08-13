@@ -139,7 +139,7 @@ export const updateUser = async (
  * @param meta the `meta` property of a Prisma.PrismaClientKnownRequestError
  * @returns a comma-separated string of fields
  */
-export const formatFields = (meta: Record<string, unknown>): string => {
+const formatFields = (meta: Record<string, unknown>): string => {
   if (!meta["target"]) {
     return "Unknown field(s)";
   }
