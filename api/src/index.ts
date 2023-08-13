@@ -13,3 +13,5 @@ const app: Express = express();
 
 app.use(API_PREFIX, router);
 app.listen(PORT, () => console.log(`app listening on port ${PORT}!`));
+
+export default app;

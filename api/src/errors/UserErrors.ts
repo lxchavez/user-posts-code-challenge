@@ -12,4 +12,18 @@ class UserMutationError extends Error {
   }
 }
 
-export { UserMutationError };
+/**
+ * Error invalid or missing request inputs for User creation.
+ * @param message the error message
+ */
+class UserInputValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UserInputValidationError";
+
+    // Set the prototype explicitly (important for instanceof checks)
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export { UserMutationError, UserInputValidationError };

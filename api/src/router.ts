@@ -1,8 +1,7 @@
 import BodyParser from "body-parser";
 import { NextFunction, Request, Response } from "express";
 import Router from "express-promise-router";
-import { Prisma } from "@prisma/client";
-import { createUser } from "./prisma";
+import { createUser } from "./user";
 import { UserMutationError } from "./errors/UserErrors";
 
 const router = Router();
@@ -43,20 +42,8 @@ router.post(
   jsonParser,
   validateRequestBody,
   (req: Request, res: Response) => {
-    const body = req.body;
-
-    if (typeof body.dateOfBirth === "string") {
-      body.dateOfBirth = new Date(body.dateOfBirth);
-    }
-
-    const userData = {
-      fullName: body.fullName,
-      email: body.email,
-      username: body.username,
-      dateOfBirth: body.dateOfBirth,
-    } satisfies Prisma.UserCreateInput;
-
-    const userPromise = createUser(userData);
+    const request = req.body;
+    const userPromise = createUser(request);
 
     void Promise.all([userPromise])
       .then(([user]) => {

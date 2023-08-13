@@ -1,20 +1,23 @@
-import { Prisma, PrismaClient } from "@prisma/client";
-import { UserMutationError } from "./errors/UserErrors";
+import { Prisma } from "@prisma/client";
+import {
+  UserMutationError,
+  UserInputValidationError,
+} from "./errors/UserErrors";
+import prisma from "./lib/prisma";
 import { PrismaMetaFields } from "./types";
-
-export const prisma = new PrismaClient();
 
 /**
  * Creates a new User entity in our database.
  * @param data the {@link Prisma.UserCreateInput} used to create a new User
- * @returns the {@link Prisma.UserCreateInput}
+ * @returns the {@link Prisma.UserCreateInput} of the new User object
  * @throws a {@link UserMutationError} if there is a unique constraint violation or invalid inputs
  */
-export const createUser = async (
-  data: Prisma.UserCreateInput,
-): Promise<Prisma.UserCreateInput> => {
+export const createUser = async (user: unknown) => {
+  validateUserInput(user);
+
   try {
-    return await prisma.user.create({ data });
+    const userData = user as Prisma.UserCreateInput;
+    return await prisma.user.create({ data: userData });
   } catch (err) {
     handleUserMutationError(err);
   }
@@ -35,6 +38,32 @@ export const formatFields = (meta: Record<string, unknown>): string => {
 };
 
 /**
+ * Validates the User data input by the client.
+ * @param input the User data input by the client
+ * @throws a {@link UserInputValidationError} if the input is not an object or is null
+ * @throws a {@link UserInputValidationError} if the input is missing a required field
+ */
+const validateUserInput = (input: unknown) => {
+  if (typeof input !== "object" || input === null) {
+    throw new UserInputValidationError("Invalid input given for User");
+  }
+
+  // TODO: Get list of required fields from Prisma.UserCreateInput, maybe with reflection?
+  const requiredFields: string[] = [
+    "fullName",
+    "email",
+    "username",
+    "dateOfBirth",
+  ];
+
+  for (const field of requiredFields) {
+    if (!(field in input)) {
+      throw new UserInputValidationError(`Missing required input: ${field}`);
+    }
+  }
+};
+
+/**
  * Handles Prisma client errors for User mutation operations. We handle errors
  * this way to limit information leakage of API/database internals to the
  * client.
@@ -44,7 +73,6 @@ export const formatFields = (meta: Record<string, unknown>): string => {
  */
 const handleUserMutationError = (err: Error): void => {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    // The .code property can be accessed in a type-safe manner
     switch (err.code) {
       case "P2002": {
         const fields = formatFields(err.meta);
@@ -59,10 +87,6 @@ const handleUserMutationError = (err: Error): void => {
         );
       }
     }
-  } else if (err instanceof Prisma.PrismaClientValidationError) {
-    throw new UserMutationError(
-      "Invalid or missing inputs given for User creation.",
-    );
   } else {
     throw err;
   }
