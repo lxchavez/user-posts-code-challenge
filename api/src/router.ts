@@ -89,7 +89,7 @@ const resolveUserPromise = (
       } else if (err instanceof UserMutationError) {
         response.status(400).send(err.message);
       } else if (err instanceof ResourceNotFound) {
-        response.status(404).send(err.message);
+        response.status(404).send({ errors: err.errors });
       } else {
         console.error(err);
         response

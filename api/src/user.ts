@@ -5,7 +5,11 @@ import {
   UserInputValidationError,
 } from "./errors/UserErrors";
 import prisma from "./lib/prisma";
-import { PrismaMetaFields, ValidationError } from "./types";
+import {
+  MissingResouceError,
+  PrismaMetaFields,
+  ValidationError,
+} from "./types";
 
 // TODO: Get list of required fields from Prisma.UserCreateInput, maybe with reflection?
 const requiredUserFields: string[] = [
@@ -66,7 +70,11 @@ export const retrieveUser = async (userId: number) => {
   });
 
   if (!user) {
-    throw new ResourceNotFound(`User with ID ${userId} does not exist`);
+    const error = {
+      msg: "User does not exist.",
+      resourceId: userId,
+    } as MissingResouceError;
+    throw new ResourceNotFound("User not found", [error]);
   }
 
   return user;
@@ -159,7 +167,12 @@ const handleUserMutationError = (err: Error): void => {
         );
       }
       case "P2025": {
-        throw new ResourceNotFound("Can't find User to update or delete.");
+        const error = {
+          msg: "User does not exist.",
+        } as MissingResouceError;
+        throw new ResourceNotFound("Can't find User to update or delete.", [
+          error,
+        ]);
       }
       default: {
         console.error(err);

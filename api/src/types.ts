@@ -7,6 +7,11 @@ type PrismaMetaFields = {
   target: string[];
 };
 
+type MissingResouceError = {
+  msg: string;
+  resourceId?: number;
+};
+
 type ValidationError = {
   location: string;
   msg: string;
@@ -15,4 +20,4 @@ type ValidationError = {
   value: string;
 };
 
-export { PrismaMetaFields, ValidationError };
+export { MissingResouceError, PrismaMetaFields, ValidationError };

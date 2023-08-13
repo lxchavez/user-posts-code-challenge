@@ -101,7 +101,7 @@ describe("API integration tests", () => {
       );
     });
 
-    it("should respond with an error response if userName is blank", async () => {
+    it("should respond with an error response if username is blank", async () => {
       const { status, body } = await request(app).post("/api/users").send({
         fullName: "John Doe",
         email: "john.doe@gmail.com",
@@ -172,6 +172,75 @@ describe("API integration tests", () => {
       expect(body["errors"][0]["msg"]).toBe(
         "Missing request body! Please send a JSON body with the request.",
       );
+    });
+  });
+
+  describe("[GET] /api/users/:id", () => {
+    it("should respond with a 200 status code and User details", async () => {
+      // First, create a new User.
+      await request(app).post("/api/users").send({
+        fullName: "Goldie Retrieve",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+
+      // Look up the newly created User.
+      const newUser = await prisma.user.findFirst();
+      const userId = newUser?.id;
+
+      // Retrieve the User by ID and verify data.
+      const { status, body } = await request(app).get(`/api/users/${userId}`);
+
+      expect(status).toBe(200);
+      expect(body.username).toBe("dog.is.good");
+    });
+
+    it("should respond with an error response if the User does not exist", async () => {
+      // Retrieve the User by ID and verify data.
+      const { status, body } = await request(app).get("/api/users/420");
+
+      expect(status).toBe(404);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe("User does not exist.");
+    });
+  });
+
+  describe("[PUT] /api/users/:id", () => {
+    it("should respond with a 200 status code and User details", async () => {
+      // First, create a new User.
+      await request(app).post("/api/users").send({
+        fullName: "Goldie Retrieve",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+
+      // Look up the newly created User.
+      const newUser = await prisma.user.findFirst();
+      const userId = newUser?.id;
+
+      // Retrieve the User by ID and verify data.
+      const { status, body } = await request(app)
+        .put(`/api/users/${userId}`)
+        .send({
+          fullName: "Max",
+        });
+
+      expect(status).toBe(200);
+      expect(body.fullName).toBe("Max");
+    });
+
+    it("should respond with an error response if the User does not exist", async () => {
+      const { status, body } = await request(app).put("/api/users/420").send({
+        fullName: "Max",
+      });
+
+      expect(status).toBe(404);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe("User does not exist.");
     });
   });
 });
