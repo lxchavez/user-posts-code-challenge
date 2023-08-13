@@ -1,6 +1,7 @@
 import BodyParser from "body-parser";
 import { NextFunction, Request, Response } from "express";
 import Router from "express-promise-router";
+import { body, validationResult } from "express-validator";
 import { Prisma } from "@prisma/client";
 import { createUser, retrieveUser, updateUser } from "./user";
 import {
@@ -9,35 +10,67 @@ import {
   UserMutationError,
 } from "./errors/UserErrors";
 
-/**
- * Validates the request body of a route. This middleware should be used for
- * routes that require a request body.
- * @param request the Express {@link Request} object
- * @param response the Express {@link Response} object
- * @param next the Express NextFunction object
- */
-const validateRequestBody = (
-  request: Request,
-  response: Response,
-  next: NextFunction,
-) => {
-  const requestBody = request.body;
+// Define validation middleware for the request body using express-validator.
+const validateRequestBody = [
+  // Validation for the body to be an object
+  body().custom((value) => {
+    if (typeof value !== "object" || Object.keys(value).length === 0) {
+      throw new Error(
+        "Missing request body! Please send a JSON body with the request.",
+      );
+    }
+    return true;
+  }),
 
-  if (
-    typeof requestBody !== "object" ||
-    Object.keys(requestBody).length === 0
-  ) {
-    response
-      .status(400)
-      .send("Missing request body! Please send a JSON body with the request.");
-    return;
-  }
+  // Define validation for expected fields in the request body.
 
-  // Add more validations here as needed.
+  body("fullName")
+    .optional()
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("fullName must not be empty or contain blanks.")
+    .isLength({ max: 255 })
+    .withMessage("fullName must be between 1 and 255 characters."),
 
-  // If validation passed, call next() to move on to the next middleware/route handler.
-  next();
-};
+  body("email")
+    .optional()
+    .isString()
+    .isEmail()
+    .withMessage("Invalid email provided.")
+    .isLength({ max: 254 }) // Maximum length is 254 characters as per RFC 5321
+    .withMessage("email must be less than or equal to 254 characters."),
+
+  body("username")
+    .optional()
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("username must not be empty or contain blanks.")
+    .isLength({ max: 15 })
+    .withMessage("username must be less than or equal 15 characters."),
+
+  body("dateOfBirth")
+    .optional()
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("dateOfBirth must be defined as an ISO 8601 string.")
+    .isISO8601()
+    .withMessage("dateOfBirth must be a valid date in the format YYYY-MM-DD.")
+    .customSanitizer((value) => {
+      return new Date(value);
+    }),
+
+  // Error handling middleware; return a useful error response if validation fails.
+  (request: Request, response: Response, next: NextFunction) => {
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
+      return response.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
 
 /**
  * Resolves a User operation promise and sends the appropriate response.
@@ -83,11 +116,6 @@ router.post(
   validateRequestBody,
   (request: Request, response: Response) => {
     const body = request.body;
-
-    // Convert date strings to Date objects.
-    if ("dateOfBirth" in body && typeof body.dateOfBirth === "string") {
-      body["dateOfBirth"] = new Date(body.dateOfBirth);
-    }
 
     const userPromise = createUser(body);
     resolveUserPromise(userPromise, response);
