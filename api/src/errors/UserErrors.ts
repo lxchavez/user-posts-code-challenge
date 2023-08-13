@@ -1,3 +1,5 @@
+import { ValidationError } from "../types";
+
 /**
  * Error for Create, Update, Delete operations of User entities.
  * @param message the error message
@@ -5,7 +7,6 @@
 class UserMutationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "UserMutationError";
 
     // Set the prototype explicitly (important for instanceof checks)
     Object.setPrototypeOf(this, new.target.prototype);
@@ -17,9 +18,11 @@ class UserMutationError extends Error {
  * @param message the error message
  */
 class UserInputValidationError extends Error {
-  constructor(message: string) {
+  public errors: ValidationError[];
+
+  constructor(message: string, errors: ValidationError[]) {
     super(message);
-    this.name = "UserInputValidationError";
+    this.errors = errors;
 
     // Set the prototype explicitly (important for instanceof checks)
     Object.setPrototypeOf(this, new.target.prototype);
@@ -33,7 +36,6 @@ class UserInputValidationError extends Error {
 class ResourceNotFound extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "NotFoundError";
 
     // Set the prototype explicitly (important for instanceof checks)
     Object.setPrototypeOf(this, new.target.prototype);

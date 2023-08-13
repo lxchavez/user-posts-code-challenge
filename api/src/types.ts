@@ -7,4 +7,12 @@ type PrismaMetaFields = {
   target: string[];
 };
 
-export { PrismaMetaFields };
+type ValidationError = {
+  location: string;
+  msg: string;
+  path: string;
+  type: string;
+  value: string;
+};
+
+export { PrismaMetaFields, ValidationError };

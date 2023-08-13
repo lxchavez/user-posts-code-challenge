@@ -5,7 +5,7 @@ import {
   UserInputValidationError,
 } from "./errors/UserErrors";
 import prisma from "./lib/prisma";
-import { PrismaMetaFields } from "./types";
+import { PrismaMetaFields, ValidationError } from "./types";
 
 // TODO: Get list of required fields from Prisma.UserCreateInput, maybe with reflection?
 const requiredUserFields: string[] = [
@@ -25,10 +25,22 @@ const requiredUserFields: string[] = [
 export const createUser = async (
   input: object,
 ): Promise<Prisma.UserCreateInput> => {
+  const validationErrors: ValidationError[] = [];
+
   for (const field of requiredUserFields) {
     if (!(field in input)) {
-      throw new UserInputValidationError(`Missing required input: ${field}`);
+      validationErrors.push({
+        location: "body",
+        msg: `Missing required input: ${field}`,
+        path: field,
+        type: "field",
+        value: input[field],
+      } as ValidationError);
     }
+  }
+
+  if (validationErrors.length > 0) {
+    throw new UserInputValidationError("Invalid input", validationErrors);
   }
 
   try {
@@ -86,8 +98,19 @@ export const updateUser = async (
   }
 
   if (!hasAtLeastOneFieldToUpdate) {
+    const validationErrors: ValidationError[] = [];
+
+    validationErrors.push({
+      location: "body",
+      msg: "At least one field with populated data is required to update a User",
+      path: "input",
+      type: "field",
+      value: "",
+    } as ValidationError);
+
     throw new UserInputValidationError(
       "At least one field with populated data is required to update a User",
+      validationErrors,
     );
   }
 

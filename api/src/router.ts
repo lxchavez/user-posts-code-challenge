@@ -37,9 +37,7 @@ const validateRequestBody = [
     .optional()
     .isString()
     .isEmail()
-    .withMessage("Invalid email provided.")
-    .isLength({ max: 254 }) // Maximum length is 254 characters as per RFC 5321
-    .withMessage("email must be less than or equal to 254 characters."),
+    .withMessage("Invalid email provided."),
 
   body("username")
     .optional()
@@ -86,10 +84,9 @@ const resolveUserPromise = (
       response.status(200).send(result);
     })
     .catch((err) => {
-      if (
-        err instanceof UserMutationError ||
-        err instanceof UserInputValidationError
-      ) {
+      if (err instanceof UserInputValidationError) {
+        response.status(400).send({ errors: err.errors });
+      } else if (err instanceof UserMutationError) {
         response.status(400).send(err.message);
       } else if (err instanceof ResourceNotFound) {
         response.status(404).send(err.message);

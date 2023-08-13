@@ -7,7 +7,8 @@
     "compile": "tsc",
     "db": "prisma db push --accept-data-loss && prisma generate",
     "dev": "npm run db && ts-node ./src/index.ts",
-    "test": "npm run db && vitest -c ./vitest.config.unit.ts"
+    "test:unit": "./scripts/run-unit-tests.sh",
+    "test:integ": "./scripts/run-integration-tests.sh"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +16,10 @@
   "devDependencies": {
     "@types/config": "^3.3.0",
     "@types/node": "^20.4.9",
+    "@types/supertest": "^2.0.12",
     "@types/validator": "^13.11.1",
     "prisma": "^5.1.1",
+    "supertest": "^6.3.3",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6",
     "vitest": "^0.34.1",
