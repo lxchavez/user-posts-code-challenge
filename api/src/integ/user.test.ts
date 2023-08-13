@@ -21,6 +21,60 @@ describe("API integration tests", () => {
       expect(body.username).toBe("johndoe1377");
     });
 
+    it("should respond with a mutation error response if input contains an email associated with another User", async () => {
+      // Create a User with the OG email address.
+      await request(app).post("/api/users").send({
+        fullName: "John Doe",
+        email: "john.doe@email.com",
+        username: "johndoe1377",
+        dateOfBirth: "1970-01-01",
+      });
+
+      // Attempt to create a User with the same email address.
+      const { status, body } = await request(app).post("/api/users").send({
+        fullName: "J. Robert Oppenheimer",
+        email: "john.doe@email.com",
+        username: "anon.scientist",
+        dateOfBirth: "1904-04-22",
+      });
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["type"]).toBe("field");
+      expect(body["errors"][0]["value"]).toBe("email");
+      expect(body["errors"][0]["msg"]).toBe(
+        "User input contains duplicate identifiers.",
+      );
+    });
+
+    it("should respond with a mutation error response if input contains a username associated with another User", async () => {
+      // Create a User with the OG email address.
+      await request(app).post("/api/users").send({
+        fullName: "John Doe",
+        email: "john.doe@email.com",
+        username: "anon.scientist",
+        dateOfBirth: "1970-01-01",
+      });
+
+      // Attempt to create a User with the same email address.
+      const { status, body } = await request(app).post("/api/users").send({
+        fullName: "J. Robert Oppenheimer",
+        email: "oppenheimer@berkely.edu",
+        username: "anon.scientist",
+        dateOfBirth: "1904-04-22",
+      });
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["type"]).toBe("field");
+      expect(body["errors"][0]["value"]).toBe("username");
+      expect(body["errors"][0]["msg"]).toBe(
+        "User input contains duplicate identifiers.",
+      );
+    });
+
     it("should respond with an error response if input is missing a required field", async () => {
       const { status, body } = await request(app).post("/api/users").send({
         fullName: "John Doe",

@@ -27,7 +27,7 @@ const resolveUserResult = (
       if (err instanceof UserInputValidationError) {
         response.status(400).send({ errors: err.errors });
       } else if (err instanceof UserMutationError) {
-        response.status(400).send(err.message);
+        response.status(400).send({ errors: err.errors });
       } else if (err instanceof ResourceNotFound) {
         response.status(404).send({ errors: err.errors });
       } else {

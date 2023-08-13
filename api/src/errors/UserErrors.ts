@@ -1,12 +1,19 @@
-import { MissingResouceError, ValidationError } from "../types";
+import {
+  EntityMutationError,
+  MissingResourceError,
+  ValidationError,
+} from "../types";
 
 /**
  * Error for Create, Update, Delete operations of User entities.
  * @param message the error message
  */
 class UserMutationError extends Error {
-  constructor(message: string) {
+  public errors: EntityMutationError[];
+
+  constructor(message: string, errors: EntityMutationError[]) {
     super(message);
+    this.errors = errors;
 
     // Set the prototype explicitly (important for instanceof checks)
     Object.setPrototypeOf(this, new.target.prototype);
@@ -34,9 +41,9 @@ class UserInputValidationError extends Error {
  * @param message the error message
  */
 class ResourceNotFound extends Error {
-  public errors: MissingResouceError[];
+  public errors: MissingResourceError[];
 
-  constructor(message: string, errors: MissingResouceError[]) {
+  constructor(message: string, errors: MissingResourceError[]) {
     super(message);
     this.errors = errors;
 

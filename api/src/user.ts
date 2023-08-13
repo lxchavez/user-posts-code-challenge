@@ -6,7 +6,8 @@ import {
 } from "./errors/UserErrors";
 import prisma from "./lib/prisma";
 import {
-  MissingResouceError,
+  EntityMutationError,
+  MissingResourceError,
   PrismaMetaFields,
   ValidationError,
 } from "./types";
@@ -73,7 +74,7 @@ export const retrieveUser = async (userId: number) => {
     const error = {
       msg: "User does not exist.",
       resourceId: userId,
-    } as MissingResouceError;
+    } as MissingResourceError;
     throw new ResourceNotFound("User not found", [error]);
   }
 
@@ -161,23 +162,36 @@ const handleUserMutationError = (err: Error): void => {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
       case "P2002": {
-        const fields = formatFields(err.meta);
+        const error = {
+          msg: "User input contains duplicate identifiers.",
+          type: "field",
+          value: formatFields(err.meta),
+        } as EntityMutationError;
+
         throw new UserMutationError(
-          `User cannot be created with duplicate fields: ${fields}`,
+          `User cannot be created with given input data.`,
+          [error],
         );
       }
       case "P2025": {
         const error = {
           msg: "User does not exist.",
-        } as MissingResouceError;
+        } as MissingResourceError;
+
         throw new ResourceNotFound("Can't find User to update or delete.", [
           error,
         ]);
       }
       default: {
         console.error(err);
+
+        const error = {
+          msg: "Encountered an unexpected error while procssing User creation request.",
+        } as EntityMutationError;
+
         throw new UserMutationError(
           "Encountered an unexpected error while procssing User creation request.",
+          [error],
         );
       }
     }

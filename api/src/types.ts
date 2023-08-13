@@ -7,9 +7,15 @@ type PrismaMetaFields = {
   target: string[];
 };
 
-type MissingResouceError = {
+type MissingResourceError = {
   msg: string;
   resourceId?: number;
+};
+
+type EntityMutationError = {
+  msg: string;
+  type?: string;
+  value?: string;
 };
 
 type ValidationError = {
@@ -20,4 +26,9 @@ type ValidationError = {
   value: string;
 };
 
-export { MissingResouceError, PrismaMetaFields, ValidationError };
+export {
+  MissingResourceError,
+  EntityMutationError,
+  PrismaMetaFields,
+  ValidationError,
+};
