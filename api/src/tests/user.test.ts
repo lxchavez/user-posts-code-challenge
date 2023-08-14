@@ -160,25 +160,41 @@ describe("updateUser", () => {
       UserMutationError,
     );
   });
+
+  it("should throw an error while the database fails updating", async () => {
+    prisma.user.update.mockImplementation(() => {
+      throw new Error(
+        "I don't know what to tell you dawg, but your DB is gone...",
+      );
+    });
+
+    const updatedUser = {
+      fullName: "John Doe",
+      email: "john.doe@example.com",
+      username: "johndoe1377",
+      dateOfBirth: new Date("1970-01-01"),
+    };
+
+    await expect(updateUser(1, updatedUser)).rejects.toThrow();
+    await expect(updateUser(1, updatedUser)).rejects.toThrowError(Error);
+  });
 });
 
 describe("retrieveUser by id", () => {
-  const existingUser = {
-    id: 1,
-    fullName: "Jane Doe",
-    email: "jane.doe@example.com",
-    username: "janeplain",
-    dateOfBirth: new Date("2000-12-25"),
-    createdAt: new Date("2021-01-01T17:30:00.000Z"),
-    updatedAt: new Date("2021-01-01T17:30:00.000Z"),
-  };
-
   it("should return existing User info", async () => {
-    const id = 1;
+    const existingUser = {
+      id: 1,
+      fullName: "Jane Doe",
+      email: "jane.doe@example.com",
+      username: "janeplain",
+      dateOfBirth: new Date("2000-12-25"),
+      createdAt: new Date("2021-01-01T17:30:00.000Z"),
+      updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+    };
 
     prisma.user.findUnique.mockResolvedValue(existingUser);
 
-    const user = await retrieveUser(id);
+    const user = await retrieveUser(existingUser.id);
     expect(user).toStrictEqual(existingUser);
   });
 

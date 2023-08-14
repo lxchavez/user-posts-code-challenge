@@ -288,16 +288,15 @@ describe("User API integration tests", () => {
   describe("[PUT] /api/users/:id", () => {
     it("should respond with a 200 status code and User details", async () => {
       // First, create a new User.
-      await request(app).post("/api/users").send({
+      const userResponse = await request(app).post("/api/users").send({
         fullName: "Goldie Retrieve",
         email: "goldie@email.com",
         username: "dog.is.good",
         dateOfBirth: "1970-01-01",
       });
 
-      // Look up the newly created User.
-      const newUser = await prisma.user.findFirst();
-      const userId = newUser?.id;
+      const userId = userResponse?.body.id;
+      expect(userId).toBeDefined();
 
       // Retrieve the User by ID and verify data.
       const { status, body } = await request(app)

@@ -10,7 +10,7 @@ import {
   MissingResourceErrorResponse,
   ValidationErrorResponse,
 } from "../types";
-import { validateInputFields } from "../utils";
+import { hasAllInputFields } from "../utils";
 
 // TODO: Get list of required fields from Prisma.PostCreateInput, maybe with reflection?
 const requiredFields: string[] = ["userId", "title", "description"];
@@ -25,7 +25,7 @@ const requiredFields: string[] = ["userId", "title", "description"];
 export const createPost = async (
   input: object,
 ): Promise<Prisma.PostCreateInput> => {
-  const validationErrors: ValidationErrorResponse[] = validateInputFields(
+  const validationErrors: ValidationErrorResponse[] = hasAllInputFields(
     input,
     requiredFields,
   );

@@ -19,10 +19,10 @@ export const formatFields = (meta: Record<string, unknown>): string => {
 /**
  * Validates that the input object contains all required fields.
  * @param input the object containing the input fields to check
- * @param requiredFields the list of required fields
+ * @param requiredFields the list of required fields against
  * @returns a list of {@link ValidationErrorResponse} objects if there are any validation errors detected
  */
-export const validateInputFields = (
+export const hasAllInputFields = (
   input: object,
   requiredFields: string[],
 ): ValidationErrorResponse[] => {
@@ -39,6 +39,33 @@ export const validateInputFields = (
       } as ValidationErrorResponse);
     }
   }
+
+  return validationErrors;
+};
+
+/**
+ * Validates that the input object contains at least one of the required fields.
+ * @param input the object containing the input fields to check
+ * @param fieldSet the list of fields to check against
+ * @returns a list of {@link ValidationErrorResponse} objects if there are any validation errors detected
+ */
+export const hasAtLeastOneInputField = (
+  input: object,
+  fieldSet: string[],
+): ValidationErrorResponse[] => {
+  const validationErrors: ValidationErrorResponse[] = [];
+
+  for (const field of fieldSet) {
+    if (field in input) {
+      return validationErrors;
+    }
+  }
+
+  validationErrors.push({
+    msg: "At least one of the input fields must be defined.",
+    type: "field",
+    value: fieldSet.join(", "),
+  } as ValidationErrorResponse);
 
   return validationErrors;
 };
