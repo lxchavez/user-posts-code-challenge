@@ -11,10 +11,7 @@ import {
   PostResponse,
   ValidationErrorResponse,
 } from "../types";
-import { hasAllInputFields } from "../utils";
-
-// TODO: Get list of required fields from Prisma.PostCreateInput, maybe with reflection?
-const requiredFields: string[] = ["userId", "title", "description"];
+import { hasAllInputFields, hasAtLeastOneInputField } from "../utils";
 
 /**
  * Creates a new Post entity in our database.
@@ -26,10 +23,11 @@ const requiredFields: string[] = ["userId", "title", "description"];
 export const createPost = async (
   input: object,
 ): Promise<Prisma.PostCreateInput> => {
-  const validationErrors: ValidationErrorResponse[] = hasAllInputFields(
-    input,
-    requiredFields,
-  );
+  const validationErrors: ValidationErrorResponse[] = hasAllInputFields(input, [
+    "userId",
+    "title",
+    "description",
+  ]);
 
   if (validationErrors.length > 0) {
     throw new PostInputValidationError("Invalid Post input.", validationErrors);
@@ -65,13 +63,13 @@ export const getAllUserPosts = async (
  * Retrieves a specific Post entity from our database. If the Post
  * does not exist, we simply return an empty  {@link PostResponse}
  * object.
- * @param id the ID of the Post to retrieve
+ * @param postId the ID of the Post to retrieve
  * @return the {@link PostResponse} object of the retrieved Post
  */
-export const getPost = async (id: number): Promise<PostResponse> => {
+export const getPost = async (postId: number): Promise<PostResponse> => {
   const post: PostResponse = await prisma.post.findUnique({
     where: {
-      id: id,
+      id: postId,
     },
   });
 
@@ -83,7 +81,43 @@ export const getPost = async (id: number): Promise<PostResponse> => {
 };
 
 /**
- * Handles Prisma client errors for User mutation operations. We handle errors
+ * Updates an existing Post entity in our database.
+ * @param postId the ID of the Post to update
+ * @param userId the ID of the User who owns the Post
+ * @param input the raw input data to update the Post with
+ * @returns the {@link Prisma.PostUpdateInput} of the updated Post object
+ * @throws a {@link PostMutationError} if there is a unique constraint violation
+ * @throws a {@link PostInputValidationError} if the input is missing required fields
+ * @throws a {@link PostNotFoundError} if the Post with the given ID does not exist
+ */
+export const updatePost = async (
+  postId: number,
+  userId: number,
+  input: object,
+): Promise<Prisma.PostUpdateInput> => {
+  const validationErrors: ValidationErrorResponse[] = hasAtLeastOneInputField(
+    input,
+    ["title", "description"],
+  );
+
+  if (validationErrors.length > 0) {
+    throw new PostInputValidationError("Invalid input", validationErrors);
+  }
+
+  try {
+    const postData = input as Prisma.PostUpdateInput;
+
+    return await prisma.post.update({
+      where: { id: postId, userId: userId },
+      data: postData,
+    });
+  } catch (err) {
+    handleMutationError(err);
+  }
+};
+
+/**
+ * Handles Prisma client errors for Post mutation operations. We handle errors
  * this way to limit information leakage of API/database internals to the
  * client.
  * @param err the error to handle
@@ -115,18 +149,6 @@ const handleMutationError = (err: Error): void => {
           error,
         ]);
       }
-      default: {
-        const error = {
-          msg: "Encountered an unexpected error while procssing Post creation request.",
-        } as EntityMutationErrorResponse;
-
-        throw new PostMutationError(
-          "Encountered an unexpected error while procssing Post creation request.",
-          [error],
-        );
-      }
     }
-  } else {
-    throw err;
   }
 };

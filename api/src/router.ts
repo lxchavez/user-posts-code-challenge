@@ -2,7 +2,12 @@ import BodyParser from "body-parser";
 import { Request, Response } from "express";
 import Router from "express-promise-router";
 import { Prisma } from "@prisma/client";
-import { createPost, getAllUserPosts, getPost } from "./entities/post";
+import {
+  createPost,
+  getAllUserPosts,
+  getPost,
+  updatePost,
+} from "./entities/post";
 import {
   createUser,
   deleteUser,
@@ -202,6 +207,22 @@ router.get(
     const id = parseInt(request.params.id);
 
     const postPromise = getPost(id);
+    resolvePostResult(postPromise, response);
+  },
+);
+
+// Update an existing Post in the database.
+router.put(
+  "/posts/:id",
+  jsonParser,
+  validateIdParameter,
+  validatePostRequest,
+  (request: Request, response: Response) => {
+    const body = request.body;
+    const postId = parseInt(request.params.id);
+    const userId = body.userId;
+
+    const postPromise = updatePost(postId, userId, body);
     resolvePostResult(postPromise, response);
   },
 );

@@ -75,11 +75,11 @@ export const retrieveUser = async (userId: number) => {
 /**
  * Updates an existing User entity in our database.
  * @param userId the ID of the User to update
- * @param input the {@link Prisma.UserUpdateInput} used to update the User
+ * @param input the raw input data used to update the User
  * @returns the {@link Prisma.UserUpdateInput} of the updated User object
  * @throws a {@link UserMutationError} if there is a unique constraint violation
  * @throws a {@link UserInputValidationError} if the input is missing required fields
- * @throws a {@link ResourceNotFound} if the User with the given ID does not exist
+ * @throws a {@link UserNotFoundError} if the User with the given ID does not exist
  */
 export const updateUser = async (
   userId: number,
