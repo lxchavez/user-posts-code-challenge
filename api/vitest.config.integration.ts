@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     include: ["src/integ/*.test.ts"],
     threads: false,
+    maxConcurrency: 1,
     setupFiles: ["src/integ/helpers/setup.ts"],
   },
   resolve: {

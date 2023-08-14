@@ -3,6 +3,7 @@
 
 # Build artifacts
 node_modules
+coverage
 
 # Editor specific files and directories
 .vscode
