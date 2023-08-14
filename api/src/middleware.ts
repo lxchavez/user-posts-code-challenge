@@ -2,18 +2,42 @@ import { NextFunction, Request, Response } from "express";
 import { body, validationResult } from "express-validator";
 import { ValidationErrorResponse } from "./types";
 
-// Define validation middleware for the request body using express-validator.
+/**
+ * Validates that the request body is a valid object.
+ * @param value the request body
+ * @returns true if the request body is a valid object
+ * @throws an Error if the request body is not a valid object
+ */
+const validateBodyType = body().custom((value) => {
+  if (typeof value !== "object" || Object.keys(value).length === 0) {
+    throw new Error(
+      "Missing request body! Please send a JSON body with the request.",
+    );
+  }
+  return true;
+});
+
+/**
+ * Marshalls a useful error response if validation of request input data fails.
+ * @param request {@link Request}
+ * @param response {@link Response}
+ * @param next {@link NextFunction}
+ * @returns a 400 response with a JSON body containing the validation errors
+ */
+const marshallErrorResponse = (
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) => {
+  const errors = validationResult(request);
+  if (!errors.isEmpty()) {
+    return response.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
 
 export const validateUserRequest = [
-  // Validation for the body to be an object
-  body().custom((value) => {
-    if (typeof value !== "object" || Object.keys(value).length === 0) {
-      throw new Error(
-        "Missing request body! Please send a JSON body with the request.",
-      );
-    }
-    return true;
-  }),
+  validateBodyType,
 
   // Define validation for expected fields in the request body.
 
@@ -53,14 +77,41 @@ export const validateUserRequest = [
       return new Date(value);
     }),
 
-  // Error handling middleware; return a useful error response if validation fails.
-  (request: Request, response: Response, next: NextFunction) => {
-    const errors = validationResult(request);
-    if (!errors.isEmpty()) {
-      return response.status(400).json({ errors: errors.array() });
-    }
-    next();
-  },
+  marshallErrorResponse,
+];
+
+export const validatePostRequest = [
+  validateBodyType,
+
+  // Define validation for expected fields in the request body.
+
+  body("userId")
+    .isInt({ min: 1 })
+    .withMessage(
+      "userId must be defined as part of the Post request as a non-negative integer.",
+    ),
+
+  body("title")
+    .optional()
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("title must not be empty or contain blanks.")
+    .isLength({ max: 20 })
+    .withMessage("title must be between 1 and 20 characters."),
+
+  body("description")
+    .optional()
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("description must not be empty or contain blanks.")
+    .isLength({ max: 140 })
+    .withMessage(
+      "description must be between 1 and 140 characters, just like OG Twitter!",
+    ),
+
+  marshallErrorResponse,
 ];
 
 /**

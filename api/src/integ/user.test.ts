@@ -369,6 +369,43 @@ describe("User API integration tests", () => {
       expect(body.id).toBe(userId);
     });
 
+    it("should respond with a 200 status code and cascade delete the User's associated Posts", async () => {
+      // First, create a new User.
+      await request(app).post("/api/users").send({
+        fullName: "Goldie Retrieve",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+
+      // Look up the newly created User.
+      const newUser = await prisma.user.findFirst();
+      const userId = newUser?.id;
+
+      // Create a new Post associated with the User.
+      const postResponse = await request(app).post("/api/posts").send({
+        title: "My First Post",
+        content: "This is my first post.",
+        userId: userId,
+      });
+      const postId = postResponse.body.id;
+
+      // Delete the Use  and verify response.
+      const userResponse = await request(app).delete(`/api/users/${userId}`);
+
+      expect(userResponse.status).toBe(200);
+      expect(userResponse.body.id).toBe(userId);
+
+      // Verify that the Post was deleted.
+      const post = await prisma.post.findFirst({
+        where: {
+          id: postId,
+        },
+      });
+
+      expect(post).toBeNull();
+    });
+
     it("should respond with an error response if the User does not exist", async () => {
       const { status, body } = await request(app).delete("/api/users/420");
 

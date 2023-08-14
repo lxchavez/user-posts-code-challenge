@@ -2,21 +2,36 @@ import BodyParser from "body-parser";
 import { Request, Response } from "express";
 import Router from "express-promise-router";
 import { Prisma } from "@prisma/client";
+import { createPost } from "./entities/post";
 import {
   createUser,
   deleteUser,
   retrieveUser,
   updateUser,
 } from "./entities/user";
-import { validateIdParameter, validateUserRequest } from "./middleware";
+import {
+  validateIdParameter,
+  validatePostRequest,
+  validateUserRequest,
+} from "./middleware";
 import {
   UserInputValidationError,
   UserMutationError,
   UserNotFoundError,
 } from "./errors/UserErrors";
+import {
+  PostInputValidationError,
+  PostMutationError,
+  PostNotFoundError,
+} from "./errors/PostErrors";
+import { ErrorResponse } from "./types";
+
+// TODO: Emit event metrics for each endpoint (e.g. POST /users, GET /users/:id, etc.).
 
 /**
  * Resolves a User operation promise and sends the appropriate response.
+ * We resolve the post promises in a separate function so that we can
+ * emit more granular event metrics.
  * @param promise the promise to resolve
  * @param response the Express {@link Response} object
  */
@@ -29,20 +44,27 @@ const resolveUserResult = (
       response.status(200).send(result);
     })
     .catch((err) => {
-      if (err instanceof UserInputValidationError) {
-        response.status(400).send({ errors: err.errors });
-      } else if (err instanceof UserMutationError) {
-        response.status(400).send({ errors: err.errors });
+      let status = 500;
+      let errors: ErrorResponse[] = [];
+      const message =
+        "Encountered an unexpected error while processing User request";
+
+      if (
+        err instanceof UserInputValidationError ||
+        err instanceof UserMutationError
+      ) {
+        status = 400;
+        errors = err.errors;
       } else if (err instanceof UserNotFoundError) {
-        response.status(404).send({ errors: err.errors });
+        status = 404;
+        errors = err.errors;
       } else {
         console.error(err);
-        response
-          .status(500)
-          .send(
-            "Encountered an unexpected error while processing User request",
-          );
       }
+
+      response
+        .status(status)
+        .send({ errors: errors.length ? errors : message });
     });
 };
 
@@ -103,8 +125,59 @@ router.delete(
   },
 );
 
+/**
+ * Resolves a Post operation promise and sends the appropriate response.
+ * We resolve the post promises in a separate function so that we can
+ * emit more granular event metrics.
+ * @param promise the promise to resolve
+ * @param response the Express {@link Response} object
+ */
+const resolvePostResult = (
+  promise: Promise<Prisma.PostCreateInput | Prisma.PostUpdateInput>,
+  response: Response,
+) => {
+  Promise.all([promise])
+    .then(([result]) => {
+      response.status(200).send(result);
+    })
+    .catch((err) => {
+      let status = 500;
+      let errors: ErrorResponse[] = [];
+      const message =
+        "Encountered an unexpected error while processing Post request";
+
+      if (err instanceof PostInputValidationError) {
+        status = 400;
+        errors = err.errors;
+      } else if (err instanceof PostMutationError) {
+        status = err.errors[0].value === "userId" ? 403 : 400;
+        errors = err.errors;
+      } else if (err instanceof PostNotFoundError) {
+        status = 404;
+        errors = err.errors;
+      } else {
+        console.error(err);
+      }
+
+      response
+        .status(status)
+        .send({ errors: errors.length ? errors : message });
+    });
+};
+
 // Post routes
 
 // Persist a new Post to the database.
+router.post(
+  "/posts",
+  jsonParser,
+  validatePostRequest,
+  (request: Request, response: Response) => {
+    const body = request.body;
+
+    const postPromise = createPost(body);
+    resolvePostResult(postPromise, response);
+  },
+);
 
 export default router;

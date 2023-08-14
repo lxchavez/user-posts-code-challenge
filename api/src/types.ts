@@ -7,6 +7,11 @@ type PrismaMetaFields = {
   target: string[];
 };
 
+type ErrorResponse =
+  | MissingResourceErrorResponse
+  | EntityMutationErrorResponse
+  | ValidationErrorResponse;
+
 type MissingResourceErrorResponse = {
   msg: string;
   resourceId?: number;
@@ -27,8 +32,9 @@ type ValidationErrorResponse = {
 };
 
 export {
-  MissingResourceErrorResponse,
   EntityMutationErrorResponse,
+  ErrorResponse,
+  MissingResourceErrorResponse,
   PrismaMetaFields,
   ValidationErrorResponse,
 };

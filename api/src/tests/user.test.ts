@@ -7,7 +7,7 @@ import {
   deleteUser,
 } from "../entities/user";
 import {
-  ResourceNotFound,
+  UserNotFoundError,
   UserMutationError,
   UserInputValidationError,
 } from "../errors/UserErrors";
@@ -131,7 +131,7 @@ describe("updateUser", () => {
 
     await expect(updateUser(nonExistingId, updatedUser)).rejects.toThrow();
     await expect(updateUser(nonExistingId, updatedUser)).rejects.toThrowError(
-      ResourceNotFound,
+      UserNotFoundError,
     );
   });
 
@@ -187,7 +187,7 @@ describe("retrieveUser by id", () => {
 
     await expect(retrieveUser(nonExistingId)).rejects.toThrow();
     await expect(retrieveUser(nonExistingId)).rejects.toThrowError(
-      ResourceNotFound,
+      UserNotFoundError,
     );
   });
 });
@@ -232,6 +232,6 @@ describe("deleteUser by id", () => {
     });
 
     await expect(deleteUser(666)).rejects.toThrow();
-    await expect(deleteUser(666)).rejects.toThrowError(ResourceNotFound);
+    await expect(deleteUser(666)).rejects.toThrowError(UserNotFoundError);
   });
 });

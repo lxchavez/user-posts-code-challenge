@@ -8,9 +8,9 @@ import prisma from "../lib/prisma";
 import {
   EntityMutationErrorResponse,
   MissingResourceErrorResponse,
-  PrismaMetaFields,
   ValidationErrorResponse,
 } from "../types";
+import { formatFields, validateInputFields } from "../utils";
 
 // TODO: Get list of required fields from Prisma.UserCreateInput, maybe with reflection?
 const requiredFields: string[] = [
@@ -30,19 +30,10 @@ const requiredFields: string[] = [
 export const createUser = async (
   input: object,
 ): Promise<Prisma.UserCreateInput> => {
-  const validationErrors: ValidationErrorResponse[] = [];
-
-  for (const field of requiredFields) {
-    if (!(field in input)) {
-      validationErrors.push({
-        location: "body",
-        msg: `Missing required input: ${field}`,
-        path: field,
-        type: "field",
-        value: input[field],
-      } as ValidationErrorResponse);
-    }
-  }
+  const validationErrors: ValidationErrorResponse[] = validateInputFields(
+    input,
+    requiredFields,
+  );
 
   if (validationErrors.length > 0) {
     throw new UserInputValidationError("Invalid input", validationErrors);
@@ -158,26 +149,12 @@ export const deleteUser = async (userId: number) => {
 };
 
 /**
- * Collects the fields from a Prisma.PrismaClientKnownRequestError.
- * @param meta the `meta` property of a Prisma.PrismaClientKnownRequestError
- * @returns a comma-separated string of fields
- */
-const formatFields = (meta: Record<string, unknown>): string => {
-  if (!meta["target"]) {
-    return "Unknown field(s)";
-  }
-
-  const fields: string[] = (meta as PrismaMetaFields).target.map(String);
-  return fields.join(", ");
-};
-
-/**
  * Handles Prisma client errors for User mutation operations. We handle errors
  * this way to limit information leakage of API/database internals to the
  * client.
  * @param err the error to handle
  * @throws a {@link UserMutationError} if there is a unique constraint violation or invalid inputs
- * @throws a {@link NotFoundError} if an entity is not found
+ * @throws a {@link UserNotFoundError} if an entity is not found
  * @throws the original {@link Error} if it is not a Prisma client or request error
  */
 const handleMutationError = (err: Error): void => {
