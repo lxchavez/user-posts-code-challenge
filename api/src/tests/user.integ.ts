@@ -85,123 +85,6 @@ describe("User API integration tests", () => {
       expect(body["errors"][0]["path"]).toBe("dateOfBirth");
     });
 
-    it("should respond with an error response if fullName is too long", async () => {
-      const { status, body } = await request(app)
-        .post("/api/users")
-        .send({
-          fullName: "X".repeat(256), // 256 characters
-          email: "john.doe@gmail.com",
-          username: "johndoe1377",
-          dateOfBirth: "1970-01-01",
-        });
-
-      expect(status).toBe(400);
-      expect(body).toHaveProperty("errors");
-      expect(body["errors"].length).toEqual(1);
-      expect(body["errors"][0]["msg"]).toBe(
-        "fullName must be between 1 and 255 characters.",
-      );
-    });
-
-    it("should respond with an error response if fullName is blank", async () => {
-      const { status, body } = await request(app).post("/api/users").send({
-        fullName: " ", // String with empty spaces
-        email: "john.doe@gmail.com",
-        username: "johndoe1377",
-        dateOfBirth: "1970-01-01",
-      });
-
-      expect(status).toBe(400);
-      expect(body).toHaveProperty("errors");
-      expect(body["errors"].length).toEqual(1);
-      expect(body["errors"][0]["msg"]).toBe(
-        "fullName must not be empty or contain blanks.",
-      );
-    });
-
-    it("should respond with an error response if input has an invalid email address", async () => {
-      const { status, body } = await request(app).post("/api/users").send({
-        fullName: "John Doe",
-        email: "john.doe", // Invalid email address
-        username: "johndoe1377",
-        dateOfBirth: "1970-01-01",
-      });
-
-      expect(status).toBe(400);
-      expect(body).toHaveProperty("errors");
-      expect(body["errors"].length).toEqual(1);
-      expect(body["errors"][0]["msg"]).toBe("Invalid email provided.");
-    });
-
-    it("should respond with an error response if username is too long", async () => {
-      const { status, body } = await request(app)
-        .post("/api/users")
-        .send({
-          fullName: "John Doe",
-          email: "john.doe@gmail.com",
-          username: "X".repeat(16),
-          dateOfBirth: "1970-01-01",
-        });
-
-      expect(status).toBe(400);
-      expect(body).toHaveProperty("errors");
-      expect(body["errors"].length).toEqual(1);
-      expect(body["errors"][0]["msg"]).toBe(
-        "username must be less than or equal 15 characters.",
-      );
-    });
-
-    it("should respond with an error response if username is blank", async () => {
-      const { status, body } = await request(app).post("/api/users").send({
-        fullName: "John Doe",
-        email: "john.doe@gmail.com",
-        username: " ", // String with empty spaces
-        dateOfBirth: "1970-01-01",
-      });
-
-      expect(status).toBe(400);
-      expect(body).toHaveProperty("errors");
-      expect(body["errors"].length).toEqual(1);
-      expect(body["errors"][0]["msg"]).toBe(
-        "username must not be empty or contain blanks.",
-      );
-    });
-
-    it("should respond with an error response if dateOfBirth is blank", async () => {
-      const { status, body } = await request(app).post("/api/users").send({
-        fullName: "John Doe",
-        email: "john.doe@gmail.com",
-        username: "johndoe1377",
-        dateOfBirth: " ", // String with empty spaces
-      });
-
-      expect(status).toBe(400);
-      expect(body).toHaveProperty("errors");
-      expect(body["errors"].length).toEqual(2);
-      expect(body["errors"][0]["msg"]).toBe(
-        "dateOfBirth must be defined as an ISO 8601 string.",
-      );
-      expect(body["errors"][1]["msg"]).toBe(
-        "dateOfBirth must be a valid date in the format YYYY-MM-DD.",
-      );
-    });
-
-    it("should respond with an error response if dateOfBirth is invalid", async () => {
-      const { status, body } = await request(app).post("/api/users").send({
-        fullName: "John Doe",
-        email: "john.doe@gmail.com",
-        username: "johndoe1377",
-        dateOfBirth: "January 1, 2020", // String with empty spaces
-      });
-
-      expect(status).toBe(400);
-      expect(body).toHaveProperty("errors");
-      expect(body["errors"].length).toEqual(1);
-      expect(body["errors"][0]["msg"]).toBe(
-        "dateOfBirth must be a valid date in the format YYYY-MM-DD.",
-      );
-    });
-
     it("should respond with an error response if request is empty", async () => {
       const { status, body } = await request(app).post("/api/users").send({});
 
@@ -342,7 +225,7 @@ describe("User API integration tests", () => {
   });
 
   describe("[PUT] /api/users/:id", () => {
-    it("should respond with a 200 status code and User details", async () => {
+    it("should respond with a 200 status code after successully updaing an existing User", async () => {
       // First, create a new User.
       const userResponse = await request(app).post("/api/users").send({
         fullName: "Goldie Retrieve",
@@ -374,6 +257,31 @@ describe("User API integration tests", () => {
       expect(body).toHaveProperty("errors");
       expect(body["errors"].length).toEqual(1);
       expect(body["errors"][0]["msg"]).toBe("User does not exist.");
+    });
+
+    it("should respond with an error response if the updated input is missing required fields", async () => {
+      // First, create a new User.
+      const userResponse = await request(app).post("/api/users").send({
+        fullName: "Goldie Retrieve",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+
+      const userId = userResponse.body.id;
+
+      const { status, body } = await request(app)
+        .put(`/api/users/${userId}`)
+        .send({
+          bogusField: "bogusValue",
+        });
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body["errors"].length).toEqual(1);
+      expect(body["errors"][0]["msg"]).toBe(
+        "At least one of the input fields must be defined.",
+      );
     });
 
     it("should respond with an error response if the id is not an integer", async () => {

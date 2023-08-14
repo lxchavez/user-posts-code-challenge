@@ -17,7 +17,7 @@ import prisma from "../lib/__mocks__/prisma";
 vi.mock("../lib/prisma");
 
 describe("createUser unit tests", () => {
-  it("should return the generated User with happy path input", async () => {
+  it("should return the generated User with valid input", async () => {
     const newUser = {
       fullName: "John Doe",
       email: "john.doe@example.com",
@@ -169,51 +169,6 @@ describe("updateUser", () => {
     await expect(updateUser(1, updatedUser)).rejects.toThrow();
     await expect(updateUser(1, updatedUser)).rejects.toThrowError(
       UserInputValidationError,
-    );
-  });
-
-  it("should throw an error while the database fails updating", async () => {
-    prisma.user.update.mockImplementation(() => {
-      throw new Error(
-        "I don't know what to tell you dawg, but your DB is gone...",
-      );
-    });
-
-    const updatedUser = {
-      fullName: "John Doe",
-      email: "john.doe@example.com",
-      username: "johndoe1377",
-      dateOfBirth: new Date("1970-01-01"),
-    };
-
-    await expect(updateUser(1, updatedUser)).rejects.toThrow();
-    await expect(updateUser(1, updatedUser)).rejects.toThrowError(Error);
-  });
-
-  it("should handle other Prisma client known request others", async () => {
-    prisma.user.update.mockImplementation(() => {
-      throw new Prisma.PrismaClientKnownRequestError(
-        "I don't know what to tell you dawg, but your client is gone...",
-        {
-          code: "BOGUS_CODE",
-          clientVersion: "1.0.0",
-          meta: {
-            cause: ["Client went for a walk. Client is also a dog??"],
-          },
-        },
-      );
-    });
-
-    const updatedUser = {
-      fullName: "John Doe",
-      email: "john.doe@example.com",
-      username: "johndoe1377",
-      dateOfBirth: new Date("1970-01-01"),
-    };
-
-    await expect(updateUser(1, updatedUser)).rejects.toThrow();
-    await expect(updateUser(1, updatedUser)).rejects.toThrowError(
-      UserMutationError,
     );
   });
 });

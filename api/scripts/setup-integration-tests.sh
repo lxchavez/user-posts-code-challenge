@@ -9,7 +9,6 @@ docker-compose up -d
 
 # Make the script wait until the database is ready
 echo '🟡 - Waiting for database to be ready...'
-echo ${NODE_ENV}
 $DIR/wait-for-it.sh "${DATABASE_URL}" -- echo '🟢 - Database is ready!'
 
 # Prep the database using our Prisma schema 

@@ -51,8 +51,6 @@ const resolveUserResult = (
     .catch((err) => {
       let status = 500;
       let errors: ErrorResponse[] = [];
-      const message =
-        "Encountered an unexpected error while processing User request";
 
       if (
         err instanceof UserInputValidationError ||
@@ -63,13 +61,9 @@ const resolveUserResult = (
       } else if (err instanceof UserNotFoundError) {
         status = 404;
         errors = err.errors;
-      } else {
-        console.error(err);
       }
 
-      response
-        .status(status)
-        .send({ errors: errors.length ? errors : message });
+      response.status(status).send({ errors });
     });
 };
 
@@ -162,8 +156,6 @@ const resolvePostResult = (
     .catch((err) => {
       let status = 500;
       let errors: ErrorResponse[] = [];
-      const message =
-        "Encountered an unexpected error while processing Post request";
 
       if (err instanceof PostInputValidationError) {
         status = 400;
@@ -174,13 +166,9 @@ const resolvePostResult = (
       } else if (err instanceof PostNotFoundError) {
         status = 404;
         errors = err.errors;
-      } else {
-        console.error(err);
       }
 
-      response
-        .status(status)
-        .send({ errors: errors.length ? errors : message });
+      response.status(status).send({ errors });
     });
 };
 

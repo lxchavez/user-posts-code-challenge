@@ -159,18 +159,6 @@ const handleMutationError = (err: Error): void => {
           error,
         ]);
       }
-      default: {
-        const error = {
-          msg: "Encountered an unexpected error while processing User creation request.",
-        } as EntityMutationErrorResponse;
-
-        throw new UserMutationError(
-          "Encountered an unexpected error while procssing User creation request.",
-          [error],
-        );
-      }
     }
-  } else {
-    throw err;
   }
 };

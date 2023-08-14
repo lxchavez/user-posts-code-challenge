@@ -18,7 +18,7 @@ import { PostResponse } from "../types";
 vi.mock("../lib/prisma");
 
 describe("createPost unit tests", () => {
-  it("should return the created Post with happy path input", async () => {
+  it("should return the created Post with valid input", async () => {
     const newPost = {
       userId: 1,
       title: "My first post",
@@ -141,7 +141,7 @@ describe("createPost unit tests", () => {
   });
 
   describe("updatePost unit tests", () => {
-    it("should return the updated Post with happy path input", async () => {
+    it("should update an existing Post with valid updated input", async () => {
       const updatedPost = {
         id: 1,
         userId: 1,
