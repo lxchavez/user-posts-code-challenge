@@ -1,3 +1,9 @@
+type EntityMutationErrorResponse = {
+  msg: string;
+  type?: string;
+  value?: string;
+};
+
 type ErrorResponse =
   | MissingResourceErrorResponse
   | EntityMutationErrorResponse
@@ -6,20 +12,6 @@ type ErrorResponse =
 type MissingResourceErrorResponse = {
   msg: string;
   resourceId?: number;
-};
-
-type EntityMutationErrorResponse = {
-  msg: string;
-  type?: string;
-  value?: string;
-};
-
-type ValidationErrorResponse = {
-  location?: string;
-  msg: string;
-  path?: string;
-  type?: string;
-  value?: string;
 };
 
 type PostResponse = {
@@ -31,10 +23,29 @@ type PostResponse = {
   userId: number;
 };
 
+type UserResponse = {
+  id: number;
+  fullName: string;
+  email: string;
+  username: string;
+  dateOfBirth: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ValidationErrorResponse = {
+  location?: string;
+  msg: string;
+  path?: string;
+  type?: string;
+  value?: string;
+};
+
 export {
   EntityMutationErrorResponse,
   ErrorResponse,
   MissingResourceErrorResponse,
   PostResponse,
+  UserResponse,
   ValidationErrorResponse,
 };

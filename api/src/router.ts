@@ -4,6 +4,7 @@ import Router from "express-promise-router";
 import { Prisma } from "@prisma/client";
 import {
   createPost,
+  deletePost,
   getAllUserPosts,
   getPost,
   updatePost,
@@ -161,7 +162,12 @@ const resolvePostResult = (
         status = 400;
         errors = err.errors;
       } else if (err instanceof PostMutationError) {
-        status = err.errors[0].value === "userId" ? 403 : 400;
+        const error = err.errors[0];
+        if (error.value && error.value === "userId") {
+          // Obfuscate real cause of error to limit information
+          // leakage of User data.
+          status = 404;
+        }
         errors = err.errors;
       } else if (err instanceof PostNotFoundError) {
         status = 404;
@@ -211,6 +217,18 @@ router.put(
     const userId = body.userId;
 
     const postPromise = updatePost(postId, userId, body);
+    resolvePostResult(postPromise, response);
+  },
+);
+
+// Delete an existing Post from the database.
+router.delete(
+  "/posts/:id",
+  validateIdParameter,
+  (request: Request, response: Response) => {
+    const postId = parseInt(request.params.id);
+
+    const postPromise = deletePost(postId);
     resolvePostResult(postPromise, response);
   },
 );

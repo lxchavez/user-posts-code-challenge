@@ -137,71 +137,109 @@ describe("Post API integration tests", () => {
       expect(body.title).toBe("Hello");
       expect(body.description).toBe("I am definetly not a dog...I am a cat!");
     });
-  });
 
-  it("should respond with an error response when updating a Post with a non-existent User", async () => {
-    // First, create a new User.
-    const userResponse = await request(app).post("/api/users").send({
-      fullName: "Goldie Retriever",
-      email: "goldie@email.com",
-      username: "dog.is.good",
-      dateOfBirth: "1970-01-01",
-    });
+    it("should respond with an error response when updating a Post with a non-existent User", async () => {
+      // First, create a new User.
+      const userResponse = await request(app).post("/api/users").send({
+        fullName: "Goldie Retriever",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
 
-    // Create a new Post associated with the User.
-    const userId = userResponse.body.id;
+      // Create a new Post associated with the User.
+      const userId = userResponse.body.id;
 
-    const originalPostResponse = await request(app).post("/api/posts").send({
-      userId: userId,
-      title: "Hello",
-      description: "I am definetly not a dog...",
-    });
-
-    const postId = originalPostResponse.body.id;
-    const bogusUserId = userId + 1;
-
-    const { status, body } = await request(app)
-      .put(`/api/posts/${postId}`)
-      .send({
-        userId: bogusUserId,
+      const originalPostResponse = await request(app).post("/api/posts").send({
+        userId: userId,
         title: "Hello",
-        description: "I am definetly not a dog...I am a cat!",
+        description: "I am definetly not a dog...",
       });
 
-    expect(status).toBe(404);
-    expect(body.errors.length).toBe(1);
-    expect(body.errors[0]["msg"]).toBe("Post does not exist.");
+      const postId = originalPostResponse.body.id;
+      const bogusUserId = userId + 1;
+
+      const { status, body } = await request(app)
+        .put(`/api/posts/${postId}`)
+        .send({
+          userId: bogusUserId,
+          title: "Hello",
+          description: "I am definetly not a dog...I am a cat!",
+        });
+
+      expect(status).toBe(404);
+      expect(body.errors.length).toBe(1);
+      expect(body.errors[0]["msg"]).toBe("Post does not exist.");
+    });
+
+    it("should respond with an error response when updating a Post with a missing required input field", async () => {
+      // First, create a new User.
+      const userResponse = await request(app).post("/api/users").send({
+        fullName: "Goldie Retriever",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+      const userId = userResponse.body.id;
+
+      // Create a new Post associated with the User.
+      const originalPostResponse = await request(app).post("/api/posts").send({
+        userId: userId,
+        title: "Hello",
+        description: "I am definetly not a dog...",
+      });
+
+      const { status, body } = await request(app)
+        .put(`/api/posts/${originalPostResponse.body.id}`)
+        .send({
+          userId,
+          // title, description is missing
+        });
+
+      expect(status).toBe(400);
+      expect(body).toHaveProperty("errors");
+      expect(body.errors.length).toBe(1);
+      expect(body.errors[0]["msg"]).toBe(
+        "At least one of the input fields must be defined.",
+      );
+    });
   });
 
-  it("should respond with an error response when updating a Post with a missing required input field", async () => {
-    // First, create a new User.
-    const userResponse = await request(app).post("/api/users").send({
-      fullName: "Goldie Retriever",
-      email: "goldie@email.com",
-      username: "dog.is.good",
-      dateOfBirth: "1970-01-01",
-    });
-    const userId = userResponse.body.id;
+  describe("[DELETE] /api/posts/:id", () => {
+    it("should respond with a 200 status code after deleting an existing post", async () => {
+      // First, create a new User.
+      const userResponse = await request(app).post("/api/users").send({
+        fullName: "Goldie Retriever",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+      const userId = userResponse.body.id;
 
-    // Create a new Post associated with the User.
-    const originalPostResponse = await request(app).post("/api/posts").send({
-      userId: userId,
-      title: "Hello",
-      description: "I am definetly not a dog...",
-    });
-
-    const { status, body } = await request(app)
-      .put(`/api/posts/${originalPostResponse.body.id}`)
-      .send({
-        userId,
-        // title, description is missing
+      // Create a new Post associated with the User.
+      const post = await request(app).post("/api/posts").send({
+        userId: userId,
+        title: "Hello",
+        description: "I am definetly not a dog...",
       });
 
-    expect(status).toBe(400);
-    expect(body).toHaveProperty("errors");
-    expect(body.errors.length).toBe(1);
-    expect(body.errors[0]["msg"]).toBe(
-      "At least one of the input fields must be defined.",
-    );
+      // Delete the User by ID and verify response.
+      const { status } = await request(app).delete(
+        `/api/posts/${post.body.id}`,
+      );
+
+      expect(status).toBe(200);
+    });
+
+    it("should respond with an error response when attempting to delete a non-existent Post", async () => {
+      const bogusPostId = 123;
+      const { status, body } = await request(app).delete(
+        `/api/posts/${bogusPostId}`,
+      );
+
+      expect(status).toBe(404);
+      expect(body.errors.length).toBe(1);
+      expect(body.errors[0]["msg"]).toBe("Post does not exist.");
+    });
   });
 });

@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
 import {
   createPost,
+  deletePost,
   getAllUserPosts,
   getPost,
   updatePost,
@@ -193,6 +194,47 @@ describe("createPost unit tests", () => {
       await expect(updatePost(1, 1, updatedPost)).rejects.toThrowError(
         PostNotFoundError,
       );
+    });
+  });
+
+  describe("deletePost unit tests", () => {
+    it("should delete existing Post from the databse", async () => {
+      const existingPost = {
+        id: 1,
+        userId: 1,
+        title: "My first post",
+        description: "This is my first post!",
+        createdAt: new Date("2021-01-01T17:30:00.000Z"),
+        updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+      };
+
+      prisma.post.delete.mockResolvedValue(existingPost);
+
+      const user = await deletePost(1);
+      expect(user).toStrictEqual({
+        ...existingPost,
+        id: 1,
+        createdAt: new Date("2021-01-01T17:30:00.000Z"),
+        updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+      });
+    });
+
+    it("should throw an error if the Post does not exist", async () => {
+      prisma.post.delete.mockImplementation(() => {
+        throw new Prisma.PrismaClientKnownRequestError(
+          "An operation failed because it depends on one or more records that were required but not found. Record to update not found.",
+          {
+            code: "P2025",
+            clientVersion: "1.0.0",
+            meta: {
+              cause: ["Record to delete does not exist."],
+            },
+          },
+        );
+      });
+
+      await expect(deletePost(123)).rejects.toThrow();
+      await expect(deletePost(123)).rejects.toThrowError(PostNotFoundError);
     });
   });
 });

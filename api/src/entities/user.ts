@@ -8,6 +8,7 @@ import prisma from "../lib/prisma";
 import {
   EntityMutationErrorResponse,
   MissingResourceErrorResponse,
+  UserResponse,
   ValidationErrorResponse,
 } from "../types";
 import { hasAllInputFields, hasAtLeastOneInputField } from "../utils";
@@ -54,7 +55,7 @@ export const createUser = async (
  * @returns the {@link Prisma.User} object of the retrieved User
  * @throws a {@link UserNotFoundError} if the User with the given ID does not exist
  */
-export const retrieveUser = async (userId: number) => {
+export const retrieveUser = async (userId: number): Promise<UserResponse> => {
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
@@ -113,7 +114,7 @@ export const updateUser = async (
  * any orphaned Posts in our database and to support the User's "right
  * to be forgotten".
  * @param userId the ID of the User to delete
- * @returns the {@link Prisma.User} object of the deleted User
+ * @returns data of the now deleted User
  * @see https://gdpr.eu/right-to-be-forgotten/
  */
 export const deleteUser = async (userId: number) => {

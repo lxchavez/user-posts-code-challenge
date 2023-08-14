@@ -117,6 +117,24 @@ export const updatePost = async (
 };
 
 /**
+ * Deletes an existing Post entity from our database.
+ * @param postId the ID of the Post to delete
+ * @returns data of the now deleted Post
+ * @throws a {@link PostNotFoundError} if the Post does not exist
+ */
+export const deletePost = async (
+  postId: number,
+): Promise<Prisma.PostUpdateInput> => {
+  try {
+    return await prisma.post.delete({
+      where: { id: postId },
+    });
+  } catch (err) {
+    handleMutationError(err);
+  }
+};
+
+/**
  * Handles Prisma client errors for Post mutation operations. We handle errors
  * this way to limit information leakage of API/database internals to the
  * client.
