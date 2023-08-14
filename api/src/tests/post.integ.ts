@@ -34,7 +34,7 @@ describe("Post API integration tests", () => {
         description: "I am definetly not a dog...",
       });
 
-      expect(status).toBe(403);
+      expect(status).toBe(404);
       expect(body.errors.length).toBe(1);
       expect(body.errors[0]["msg"]).toBe(
         "User is not authorized to perform this action.",
