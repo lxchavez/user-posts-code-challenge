@@ -62,6 +62,27 @@ export const getAllUserPosts = async (
 };
 
 /**
+ * Retrieves a specific Post entity from our database. If the Post
+ * does not exist, we simply return an empty  {@link PostResponse}
+ * object.
+ * @param id the ID of the Post to retrieve
+ * @return the {@link PostResponse} object of the retrieved Post
+ */
+export const getPost = async (id: number): Promise<PostResponse> => {
+  const post: PostResponse = await prisma.post.findUnique({
+    where: {
+      id: id,
+    },
+  });
+
+  if (!post) {
+    return {} as PostResponse;
+  }
+
+  return post;
+};
+
+/**
  * Handles Prisma client errors for User mutation operations. We handle errors
  * this way to limit information leakage of API/database internals to the
  * client.

@@ -2,7 +2,7 @@ import BodyParser from "body-parser";
 import { Request, Response } from "express";
 import Router from "express-promise-router";
 import { Prisma } from "@prisma/client";
-import { createPost, getAllUserPosts } from "./entities/post";
+import { createPost, getAllUserPosts, getPost } from "./entities/post";
 import {
   createUser,
   deleteUser,
@@ -190,6 +190,18 @@ router.post(
     const body = request.body;
 
     const postPromise = createPost(body);
+    resolvePostResult(postPromise, response);
+  },
+);
+
+// Retrieve an existing Post from the database.
+router.get(
+  "/posts/:id",
+  validateIdParameter,
+  (request: Request, response: Response) => {
+    const id = parseInt(request.params.id);
+
+    const postPromise = getPost(id);
     resolvePostResult(postPromise, response);
   },
 );

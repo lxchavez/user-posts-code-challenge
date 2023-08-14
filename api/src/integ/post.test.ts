@@ -169,4 +169,42 @@ describe("Post API integration tests", () => {
       ).toBe(true);
     });
   });
+
+  describe("[GET] /api/posts/:id", () => {
+    it("should respond with a 200 status code and the Post for an existing post", async () => {
+      const userResponse = await request(app).post("/api/users").send({
+        fullName: "Goldie Retriever",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+      const userId = userResponse.body.id;
+
+      // Create a new Post associated with the User.
+      const postResponse = await request(app).post("/api/posts").send({
+        userId: userId,
+        title: "Hello",
+        description: "I am definetly not a dog...",
+      });
+      const postId = postResponse.body.id;
+
+      // Get the Post by ID.
+      const { status, body } = await request(app).get(`/api/posts/${postId}`);
+
+      expect(status).toBe(200);
+      expect(body.userId).toBe(userId);
+      expect(body.title).toBe("Hello");
+      expect(body.description).toBe("I am definetly not a dog...");
+    });
+
+    it("should respond with a 200 status code and an empty Post object for an ID that could not be found", async () => {
+      const bogusPostId = 1;
+      const { status, body } = await request(app).get(
+        `/api/posts/${bogusPostId}`,
+      );
+
+      expect(status).toBe(200);
+      expect(body).toStrictEqual({});
+    });
+  });
 });

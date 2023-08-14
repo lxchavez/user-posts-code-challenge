@@ -1,12 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
-import { createPost, getAllUserPosts } from "../entities/post";
+import { createPost, getAllUserPosts, getPost } from "../entities/post";
 import {
   PostNotFoundError,
   PostMutationError,
   PostInputValidationError,
 } from "../errors/PostErrors";
 import prisma from "../lib/__mocks__/prisma";
+import { PostResponse } from "../types";
 
 // Lets Vitest know that it should mock the module at the given path.
 vi.mock("../lib/prisma");
@@ -100,6 +101,37 @@ describe("createPost unit tests", () => {
       const result = await getAllUserPosts(userId);
 
       expect(result).toStrictEqual(posts);
+    });
+  });
+
+  describe("getPostById unit tests", () => {
+    describe("getPostById unit tests", () => {
+      it("should return a Post for a given ID", async () => {
+        const postId = 1;
+        const post = {
+          id: postId,
+          userId: 1,
+          title: "My first post",
+          description: "This is my first post!",
+          createdAt: new Date("2021-01-01T17:30:00.000Z"),
+          updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+        };
+
+        prisma.post.findUnique.mockResolvedValue(post);
+
+        const result = await getPost(postId);
+
+        expect(result).toStrictEqual(post);
+      });
+
+      it("should return an empty Post for a given ID if it does not exist", async () => {
+        prisma.post.findUnique.mockResolvedValue(null);
+
+        const bogusId = 1;
+        const result = await getPost(bogusId);
+
+        expect(result).toStrictEqual({} as PostResponse);
+      });
     });
   });
 });
