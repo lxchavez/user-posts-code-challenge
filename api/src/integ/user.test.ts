@@ -41,10 +41,8 @@ describe("User API integration tests", () => {
       expect(status).toBe(400);
       expect(body).toHaveProperty("errors");
       expect(body["errors"].length).toEqual(1);
-      expect(body["errors"][0]["type"]).toBe("field");
-      expect(body["errors"][0]["value"]).toBe("email");
       expect(body["errors"][0]["msg"]).toBe(
-        "User input contains duplicate identifiers.",
+        "User cannot be created at this time.",
       );
     });
 
@@ -68,10 +66,8 @@ describe("User API integration tests", () => {
       expect(status).toBe(400);
       expect(body).toHaveProperty("errors");
       expect(body["errors"].length).toEqual(1);
-      expect(body["errors"][0]["type"]).toBe("field");
-      expect(body["errors"][0]["value"]).toBe("username");
       expect(body["errors"][0]["msg"]).toBe(
-        "User input contains duplicate identifiers.",
+        "User cannot be created at this time.",
       );
     });
 

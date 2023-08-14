@@ -10,11 +10,7 @@ import {
   MissingResourceErrorResponse,
   ValidationErrorResponse,
 } from "../types";
-import {
-  formatFields,
-  hasAllInputFields,
-  hasAtLeastOneInputField,
-} from "../utils";
+import { hasAllInputFields, hasAtLeastOneInputField } from "../utils";
 
 // TODO: Get list of required fields from Prisma.UserCreateInput, maybe with reflection?
 const requiredFields: string[] = [
@@ -146,9 +142,7 @@ const handleMutationError = (err: Error): void => {
     switch (err.code) {
       case "P2002": {
         const error = {
-          msg: "User input contains duplicate identifiers.",
-          type: "field",
-          value: formatFields(err.meta),
+          msg: "User cannot be created at this time.",
         } as EntityMutationErrorResponse;
 
         throw new UserMutationError(
@@ -166,10 +160,8 @@ const handleMutationError = (err: Error): void => {
         ]);
       }
       default: {
-        console.error(err);
-
         const error = {
-          msg: "Encountered an unexpected error while procssing User creation request.",
+          msg: "Encountered an unexpected error while processing User creation request.",
         } as EntityMutationErrorResponse;
 
         throw new UserMutationError(

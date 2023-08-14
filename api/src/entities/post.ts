@@ -77,8 +77,6 @@ const handleMutationError = (err: Error): void => {
         ]);
       }
       default: {
-        console.error(err);
-
         const error = {
           msg: "Encountered an unexpected error while procssing Post creation request.",
         } as EntityMutationErrorResponse;

@@ -161,6 +161,17 @@ describe("updateUser", () => {
     );
   });
 
+  it("should throw an error if there is not at least one required input field set to be updated", async () => {
+    const updatedUser = {
+      id: 1,
+    };
+
+    await expect(updateUser(1, updatedUser)).rejects.toThrow();
+    await expect(updateUser(1, updatedUser)).rejects.toThrowError(
+      UserInputValidationError,
+    );
+  });
+
   it("should throw an error while the database fails updating", async () => {
     prisma.user.update.mockImplementation(() => {
       throw new Error(
@@ -177,6 +188,33 @@ describe("updateUser", () => {
 
     await expect(updateUser(1, updatedUser)).rejects.toThrow();
     await expect(updateUser(1, updatedUser)).rejects.toThrowError(Error);
+  });
+
+  it("should handle other Prisma client known request others", async () => {
+    prisma.user.update.mockImplementation(() => {
+      throw new Prisma.PrismaClientKnownRequestError(
+        "I don't know what to tell you dawg, but your client is gone...",
+        {
+          code: "BOGUS_CODE",
+          clientVersion: "1.0.0",
+          meta: {
+            cause: ["Client went for a walk. Client is also a dog??"],
+          },
+        },
+      );
+    });
+
+    const updatedUser = {
+      fullName: "John Doe",
+      email: "john.doe@example.com",
+      username: "johndoe1377",
+      dateOfBirth: new Date("1970-01-01"),
+    };
+
+    await expect(updateUser(1, updatedUser)).rejects.toThrow();
+    await expect(updateUser(1, updatedUser)).rejects.toThrowError(
+      UserMutationError,
+    );
   });
 });
 

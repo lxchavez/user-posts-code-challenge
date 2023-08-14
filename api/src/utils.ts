@@ -1,20 +1,6 @@
-import { PrismaMetaFields, ValidationErrorResponse } from "./types";
+import { ValidationErrorResponse } from "./types";
 
 // Define re-usable helper functions here.
-
-/**
- * Collects the fields from a Prisma.PrismaClientKnownRequestError.
- * @param meta the `meta` property of a Prisma.PrismaClientKnownRequestError
- * @returns a comma-separated string of fields
- */
-export const formatFields = (meta: Record<string, unknown>): string => {
-  if (!meta["target"]) {
-    return "Unknown field(s)";
-  }
-
-  const fields: string[] = (meta as PrismaMetaFields).target.map(String);
-  return fields.join(", ");
-};
 
 /**
  * Validates that the input object contains all required fields.
