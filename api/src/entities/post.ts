@@ -8,6 +8,7 @@ import prisma from "../lib/prisma";
 import {
   EntityMutationErrorResponse,
   MissingResourceErrorResponse,
+  PostResponse,
   ValidationErrorResponse,
 } from "../types";
 import { hasAllInputFields } from "../utils";
@@ -41,6 +42,23 @@ export const createPost = async (
   } catch (err) {
     handleMutationError(err);
   }
+};
+
+/**
+ * Retrieves all Posts associated with a specific User account.
+ * @param userId the ID of the User to retrieve Posts for
+ * @returns an array of {@link PostResponse} objects or an empty array if no Posts are found
+ */
+export const getAllUserPosts = async (
+  userId: number,
+): Promise<PostResponse[]> => {
+  const posts: PostResponse[] = await prisma.post.findMany({
+    where: {
+      userId: userId,
+    },
+  });
+
+  return posts;
 };
 
 /**

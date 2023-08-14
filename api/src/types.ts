@@ -22,9 +22,19 @@ type ValidationErrorResponse = {
   value?: string;
 };
 
+type PostResponse = {
+  id: number;
+  title: string;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: number;
+};
+
 export {
   EntityMutationErrorResponse,
   ErrorResponse,
   MissingResourceErrorResponse,
+  PostResponse,
   ValidationErrorResponse,
 };

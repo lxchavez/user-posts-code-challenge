@@ -281,6 +281,66 @@ describe("User API integration tests", () => {
     });
   });
 
+  describe("[GET] /api/users/:id/posts", () => {
+    it("should respond with a 200 status code and all Posts associated with a User", async () => {
+      // First, create a new User.
+      await request(app).post("/api/users").send({
+        fullName: "Goldie Retriever",
+        email: "goldie@email.com",
+        username: "dog.is.good",
+        dateOfBirth: "1970-01-01",
+      });
+
+      // Look up the newly created User.
+      const newUser = await prisma.user.findFirst();
+      const userId = newUser?.id;
+      expect(userId).toBeDefined();
+
+      const posts = [
+        {
+          id: 1,
+          userId,
+          title: "My first post",
+          description: "This is my first post!",
+          createdAt: new Date("2021-01-01T17:30:00.000Z"),
+          updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+        },
+        {
+          id: 2,
+          userId,
+          title: "My second post",
+          description: "This is my second post!",
+          createdAt: new Date("2021-01-02T17:30:00.000Z"),
+          updatedAt: new Date("2021-01-02T17:30:00.000Z"),
+        },
+      ];
+
+      // Create the Posts.
+      const promises = posts.map(async (post) => {
+        await request(app).post("/api/posts").send(post);
+      });
+      await Promise.all(promises);
+
+      // Retrieve the User's posts.
+      const { status, body } = await request(app).get(
+        `/api/users/${userId}/posts`,
+      );
+
+      expect(status).toBe(200);
+      expect(body.length).toBe(2);
+    });
+
+    it("should respond with a 200 status code an empty lists of Posts for a User that does not exist", async () => {
+      const bogusUserId = 420;
+      const { status, body } = await request(app).get(
+        `/api/users/${bogusUserId}/posts`,
+      );
+
+      expect(status).toBe(200);
+      expect(body.length).toBe(0);
+    });
+  });
+
   describe("[PUT] /api/users/:id", () => {
     it("should respond with a 200 status code and User details", async () => {
       // First, create a new User.

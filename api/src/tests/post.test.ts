@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
-import { createPost } from "../entities/post";
+import { createPost, getAllUserPosts } from "../entities/post";
 import {
   PostNotFoundError,
   PostMutationError,
@@ -71,5 +71,35 @@ describe("createPost unit tests", () => {
 
     await expect(createPost(newPost)).rejects.toThrow();
     await expect(createPost(newPost)).rejects.toThrowError(PostMutationError);
+  });
+
+  describe("getAllUserPosts unit tests", () => {
+    it("should return all Posts for a given User", async () => {
+      const userId = 1;
+      const posts = [
+        {
+          id: 1,
+          userId,
+          title: "My first post",
+          description: "This is my first post!",
+          createdAt: new Date("2021-01-01T17:30:00.000Z"),
+          updatedAt: new Date("2021-01-01T17:30:00.000Z"),
+        },
+        {
+          id: 2,
+          userId,
+          title: "My second post",
+          description: "This is my second post!",
+          createdAt: new Date("2021-01-02T17:30:00.000Z"),
+          updatedAt: new Date("2021-01-02T17:30:00.000Z"),
+        },
+      ];
+
+      prisma.post.findMany.mockResolvedValue(posts);
+
+      const result = await getAllUserPosts(userId);
+
+      expect(result).toStrictEqual(posts);
+    });
   });
 });

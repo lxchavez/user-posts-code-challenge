@@ -2,7 +2,7 @@ import BodyParser from "body-parser";
 import { Request, Response } from "express";
 import Router from "express-promise-router";
 import { Prisma } from "@prisma/client";
-import { createPost } from "./entities/post";
+import { createPost, getAllUserPosts } from "./entities/post";
 import {
   createUser,
   deleteUser,
@@ -24,7 +24,7 @@ import {
   PostMutationError,
   PostNotFoundError,
 } from "./errors/PostErrors";
-import { ErrorResponse } from "./types";
+import { ErrorResponse, PostResponse } from "./types";
 
 // TODO: Emit event metrics for each endpoint (e.g. POST /users, GET /users/:id, etc.).
 
@@ -98,6 +98,18 @@ router.get(
   },
 );
 
+// Retrieve all Posts associated with a specific User.
+router.get(
+  "/users/:id/posts",
+  validateIdParameter,
+  (request: Request, response: Response) => {
+    const id = parseInt(request.params.id);
+
+    const postsPromise = getAllUserPosts(id);
+    resolvePostResult(postsPromise, response);
+  },
+);
+
 // Update an existing User in the database.
 router.put(
   "/users/:id",
@@ -133,7 +145,9 @@ router.delete(
  * @param response the Express {@link Response} object
  */
 const resolvePostResult = (
-  promise: Promise<Prisma.PostCreateInput | Prisma.PostUpdateInput>,
+  promise: Promise<
+    Prisma.PostCreateInput | Prisma.PostUpdateInput | PostResponse[]
+  >,
   response: Response,
 ) => {
   Promise.all([promise])
