@@ -8,7 +8,9 @@
     "db": "prisma db push --accept-data-loss && prisma generate",
     "dev": "npm run db && ts-node ./src/index.ts",
     "test:unit": "npm run db && vitest run -c ./vitest.config.unit.ts",
-    "test:integ": "./scripts/run-integration-tests.sh",
+    "test:unit:ui": "npm run db && vitest -c ./vitest.config.unit.ts --ui --coverage",
+    "test:integ": "./scripts/setup-integration-tests.sh && vitest run -c ./vitest.config.integration.ts",
+    "test:integ:ui": "./scripts/setup-integration-tests.sh && vitest -c ./vitest.config.integration.ts --ui --coverage",
     "coverage:unit": "vitest run --coverage -c ./vitest.config.unit.ts",
     "coverage:integ": "vitest run --coverage -c ./vitest.config.integration.ts"
   },
@@ -21,6 +23,7 @@
     "@types/supertest": "^2.0.12",
     "@types/validator": "^13.11.1",
     "@vitest/coverage-v8": "^0.34.1",
+    "@vitest/ui": "^0.34.1",
     "prisma": "^5.1.1",
     "supertest": "^6.3.3",
     "ts-node": "^10.9.1",

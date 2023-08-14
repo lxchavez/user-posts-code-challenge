@@ -2,14 +2,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["src/integ/*.test.ts"],
+    include: ["src/tests/*.integ.ts"],
     threads: false,
     maxConcurrency: 1,
-    setupFiles: ["src/integ/helpers/setup.ts"],
-  },
-  resolve: {
-    alias: {
-      lib: "/src/lib",
-    },
+    setupFiles: ["src/tests/helpers/setup.ts"],
   },
 });

@@ -14,6 +14,3 @@ $DIR/wait-for-it.sh "${DATABASE_URL}" -- echo '🟢 - Database is ready!'
 
 # Prep the database using our Prisma schema 
 npx prisma db push --accept-data-loss && npx prisma generate
-
-# Finally, run our integration tests
-vitest run -c ./vitest.config.integration.ts
