@@ -2,7 +2,7 @@
 
 ## Description
 
-Your task is to build a User Management API with a one-to-many relationship to Posts using Node.js, Express.js, and PostgresQL (using Prisma.js for communication). The API should allow CRUD operations on both User and Post data.
+Your task is to build a User Management API with a one-to-many relationship to Posts using Node.js, Express.js, and PostgreSQL (using Prisma.js for communication). The API should allow CRUD operations on both User and Post data.
 
 \*\* Please fork this repo and commit all changes to your newly created repo following standard git procedures. A link to the newly created repo should be shared once the code challenge is complete.
 
