@@ -42,6 +42,18 @@ Your task is to build a User Management API with a one-to-many relationship to P
      - Gate user actions behind auth (creating user posts, etc...)
    - Allow users to upload a profile image or image for a post, storing the URL in an additional field on the User/Post model.
 
+## Setting Up Development Tools (Optional)
+
+If you'd like to setup optional tooling to work on this project, then:
+
+1. Install [Node](https://nodejs.org/en) 20, with something like [nvm](https://github.com/nvm-sh/nvm).
+2. Run `npm install`
+3. Install the following VS Code extensions to boost development productivity:
+
+- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- [Prisma](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma)
+
 ## Getting Started
 
 Navigate to `/api/README.md` to get started
