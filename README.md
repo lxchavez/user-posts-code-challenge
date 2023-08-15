@@ -46,8 +46,8 @@ Your task is to build a User Management API with a one-to-many relationship to P
 
 If you'd like to setup optional tooling to work on this project, then:
 
-1. Install [Node](https://nodejs.org/en) 20, with something like [nvm](https://github.com/nvm-sh/nvm).
-2. Run `npm install`
+1. Install [Node.js](https://nodejs.org/en) Version 20, with something like [nvm](https://github.com/nvm-sh/nvm).
+2. Run `npm install` from the root directory of this project.
 3. Install the following VS Code extensions to boost development productivity:
 
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
